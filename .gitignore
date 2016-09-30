@@ -90,3 +90,4 @@ ENV/
 video_data
 .rosinstall
 .idea
+*.png

@@ -24,10 +24,10 @@ import sys
 
 ros_slam_path = "/opt/ros-ort"
 # sys.path.insert(0, ros_slam_path+"/src/frcnn/src/py-faster-rcnn")
-sys.path.insert(0, ros_slam_path+"/src/frcnn/src/py-faster-rcnn/caffe-fast-rcnn/python")
-sys.path.insert(0, ros_slam_path+"/src/frcnn/src/py-faster-rcnn/lib")
-sys.path.insert(0, ros_slam_path+"/devel/lib/python2.7/dist-packages")
-sys.path.insert(0, "/opt/ros/kinetic/lib/python2.7/dist-packages")
+# sys.path.insert(0, ros_slam_path+"/src/frcnn/src/py-faster-rcnn/caffe-fast-rcnn/python")
+# sys.path.insert(0, ros_slam_path+"/src/frcnn/src/py-faster-rcnn/lib")
+# sys.path.insert(0, ros_slam_path+"/devel/lib/python2.7/dist-packages")
+# sys.path.insert(0, "/opt/ros/kinetic/lib/python2.7/dist-packages")
 
 import rospy
 # from std_msgs.msg import String
@@ -149,8 +149,6 @@ def vis_detections(im, class_name, dets, thresh=0.5):
 def frame_detect(net, im):
     """Detect object classes in an image using pre-computed object proposals."""
     global current_scores, current_boxes
-
-    # print("starting object detection")
     # Detect all object classes and regress object bounds
     timer = Timer()
     timer.tic()
@@ -191,8 +189,9 @@ def fake_detect(fname="pics/kf_20542.png",net=None):
     if net is not None:
         frame_detect(net)
 
-def deserialize_and_detect_thread(msg, net):
+def deserialize_and_detect_thread(msg, net, bb_pub):
     global current_frame, current_frame_id, DETECT_RUNNING, frames_detected, detection_start, detect_running
+    # global current_scores, current_boxes
     im_id = msg.header.seq
     if not DETECT_RUNNING:
         DETECT_RUNNING = True
@@ -213,24 +212,29 @@ def deserialize_and_detect_thread(msg, net):
         current_frame_id = im_id
         if net is not None:
             frame_detect(net, img)
-        # # plt.show()
+            # pub_detections(bb_pub, class_name, dets, thresh=0.5)
+
         cv2.imwrite("output/f_" + str(current_frame_id) + ".png", current_frame)
         now = time.time()
         detection_time = now - detection_start
         fps = frames_detected / detection_time
         print("Running for {} sec., detection with {} fps.".format(detection_time, fps))
+        
         # finally:
         #     detect_running.release()
         DETECT_RUNNING = False
     else:
         print("SKipping detection in frame {}".format(im_id))
 
-def cb_frame_rec(msg, net=None):
+def cb_frame_rec(msg, args):
+    net=args[0]
+    bb_pub=args[1]
     # global current_frame, current_frame_id, DETECT_RUNNING, frames_detected, detection_start, detect_running
     im_id = msg.header.seq
     print("Frame {} received".format(im_id))
-    t = Thread(target=deserialize_and_detect_thread, args=(msg, net))
-    t.start()
+    deserialize_and_detect_thread(msg, net, bb_pub)
+    # t = Thread(target=deserialize_and_detect_thread, args=(msg, net, bb_pub))
+    # t.start()
 
 if __name__ == '__main__':
 
@@ -261,11 +265,13 @@ if __name__ == '__main__':
     for i in xrange(2):
         _, _= im_detect(net, im)
 
+    # Create bounding box publisher
+    bb_pub = rospy.Publisher('frcnn/bb', objectBBMsg, queue_size=1)
     detection_start = time.time()
-    sub_frames = rospy.Subscriber("/image_raw", Image, cb_frame_rec, queue_size=1, callback_args=net)
+    args = [net, bb_pub]
+    sub_frames = rospy.Subscriber("/image_raw", Image, cb_frame_rec, queue_size=1, callback_args=args)
     rospy.spin()
 
-    # bb_pub = rospy.Publisher('frcnn/bb', objectBBMsg, queue_size=1)
     #
     # # fake_detect(net=net)
     #
