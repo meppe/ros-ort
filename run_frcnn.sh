@@ -1,5 +1,5 @@
 #!/bin/bash
-# docker rm ros_frcnn
+docker rm ros_frcnn
 xhost +local:`docker inspect --format='{{ .Config.Hostname }}' ros_frcnn` 
 nvidia-docker run \
 --rm \
@@ -16,5 +16,5 @@ nvidia-docker run \
 --name ros_frcnn \
 --entrypoint="/frcnn_entrypoint.sh" \
 meppe78/ros-kinetic-frcnn \
-bash  
+bash -c 'python src/frcnn/scripts/run_detect.py --cpu'
 xhost -local:`docker inspect --format='{{ .Config.Hostname }}' ros_frcnn`
