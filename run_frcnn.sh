@@ -1,5 +1,5 @@
 #!/bin/bash
-docker rm ros_frcnn
+# docker rm ros_frcnn
 xhost +local:`docker inspect --format='{{ .Config.Hostname }}' ros_frcnn` 
 nvidia-docker run \
 --rm \
