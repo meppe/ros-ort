@@ -1,6 +1,6 @@
 #!/bin/bash
-docker rm ros_frcnn
-xhost +local:`docker inspect --format='{{ .Config.Hostname }}' ros_frcnn` 
+docker rm ros_frcnn_visualize
+xhost +local:`docker inspect --format='{{ .Config.Hostname }}' ros_frcnn_visualize` 
 nvidia-docker run \
 --rm \
 -v /$(pwd)/src/frcnn:/opt/ros-ort/src/frcnn \
@@ -13,8 +13,9 @@ nvidia-docker run \
 --env="DISPLAY" \
 --env="QT_X11_NO_MITSHM=1" \
 --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
---name ros_frcnn \
+--name ros_frcnn_visualize \
 --entrypoint="/frcnn_entrypoint.sh" \
 meppe78/ros-kinetic-frcnn \
-bash -c 'python src/frcnn/scripts/run_detect.py --cpu'
-xhost -local:`docker inspect --format='{{ .Config.Hostname }}' ros_frcnn`
+bash
+# bash -c "source '/opt/ros/kinetic/setup.bash' && source '/opt/ros-ort/devel/setup.bash' && python src/frcnn/scripts/run_visualize.py --cpu"
+xhost -local:`docker inspect --format='{{ .Config.Hostname }}' ros_frcnn_visualize`

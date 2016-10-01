@@ -7,8 +7,7 @@ ros_slam_path = "/opt/ros-ort"
 sys.path.insert(0, ros_slam_path+"/src/frcnn/src/py-faster-rcnn")
 sys.path.insert(0, ros_slam_path+"/src/frcnn/src/py-faster-rcnn/caffe-fast-rcnn/python")
 sys.path.insert(0, ros_slam_path+"/src/frcnn/src/py-faster-rcnn/lib")
-# sys.path.insert(0, ros_slam_path+"/devel/lib/python2.7/dist-packages")
-# sys.path.insert(0, "/opt/ros/kinetic/lib/python2.7/dist-packages")
+
 
 import rospy
 from ort_msgs.msg import objectBBMsg
@@ -19,7 +18,6 @@ from fast_rcnn.config import cfg
 from fast_rcnn.test import im_detect
 from fast_rcnn.nms_wrapper import nms
 from utils.timer import Timer
-import matplotlib.pyplot as plt
 import numpy as np
 import caffe, os, cv2
 from threading import Thread, Lock
@@ -44,7 +42,7 @@ class Detector:
         self.CONF_THRESH = 0.2
         self.NMS_THRESH = 0.1
 
-        rospy.init_node("frcnn")
+        rospy.init_node("frcnn_detector")
         print("node initialized")
         cfg.TEST.HAS_RPN = True  # Use RPN for proposals
 
@@ -73,6 +71,7 @@ class Detector:
 
         # Create bounding box publisher
         self.bb_pub = rospy.Publisher('frcnn/bb', objectBBMsg, queue_size=1)
+        self.bb_img_pub = rospy.Publisher('frcnn/bb_img', Image, queue_size=1)
 
         self.detection_start = time.time()
         # args = [self.net, self.bb_pub]
@@ -112,6 +111,7 @@ class Detector:
 
         bbMsg = objectBBMsg(self.current_frame_id, isKeyFrame, highscorebb, class_name, highscore)
         print("publishing bb" + str(bbMsg))
+
         self.bb_pub.publish(bbMsg)
 
     def frame_detect(self, net, im):
@@ -146,7 +146,10 @@ class Detector:
         im_id = msg.header.seq
         if not Detector.DETECT_RUNNING:
             Detector.DETECT_RUNNING = True
-            print("Starting detection of frame {}.".format(im_id))
+            # re-publish image that is worked on
+            msg.header.seq = self.current_frame_id
+            self.bb_img_pub.publish(msg)
+            # print("Starting detection of frame {}.".format(im_id))
             self.frames_detected += 1
             bridge = CvBridge()
             cv_image = bridge.imgmsg_to_cv2(msg, msg.encoding)
@@ -169,11 +172,12 @@ class Detector:
 
             Detector.DETECT_RUNNING = False
         else:
-            print("SKipping detection in frame {}".format(im_id))
+            # print("SKipping detection in frame {}".format(im_id))
+            pass
 
     def cb_frame_rec(self, msg):
         im_id = msg.header.seq
-        print("Frame {} received".format(im_id))
+        # print("Frame {} received".format(im_id))
         # self.deserialize_and_detect_thread(msg)
         t = Thread(target=self.deserialize_and_detect_thread, args=[msg])
         t.start()

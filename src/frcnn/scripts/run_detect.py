@@ -13,13 +13,11 @@ Demo script showing detections in sample images.
 See README.md for installation instructions before running.
 """
 
-import sys
 import argparse
 
-ros_slam_path = "/opt/ros-ort"
-sys.path.insert(0, ros_slam_path+"/src/frcnn/src")
+from frcnn.detector import Detector
 
-from detector import Detector
+
 
 NETS = {'vgg16': ('VGG16',
                   'VGG16_faster_rcnn_final.caffemodel'),
@@ -32,6 +30,7 @@ CLASSES = ('__background__',
                    'cow', 'diningtable', 'dog', 'horse',
                    'motorbike', 'person', 'pottedplant',
                    'sheep', 'sofa', 'train', 'tvmonitor')
+
 
 def parse_args():
     """Parse input arguments."""
