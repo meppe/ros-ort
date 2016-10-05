@@ -112,61 +112,6 @@ class Detector:
                 obj_labels.append(obj_label)
                 class_names.append(cls)
 
-
-
-            # dets = np.hstack((cls_boxes,
-            #                   cls_scores[:, np.newaxis])).astype(np.float32)
-            # keep = nms(dets, NMS_THRESH)
-            # dets = dets[keep, :]
-            # self.pub_class_detections(cls, dets, thresh=CONF_THRESH)
-
-    # def pub_class_detections(self, class_name, dets, thresh=CONF_THRESH):
-    #     inds = np.where(dets[:, -1] >= thresh)[0]
-    #     if len(inds) == 0:
-    #         return
-    #
-    #     print("Publishing detection of class " + str(class_name))
-    #
-    #     isKeyFrame = False
-    #
-    #     class_name = str(class_name)
-    #
-    #     highscorebb = None
-    #     highscore = 0
-    #     for i in inds:
-    #         bbox = dets[i, :4]
-    #         score = dets[i, -1]
-    #         if score > highscore:
-    #             highscorebb = bbox
-    #             highscore = score
-    #
-    #
-    #     print("publishing bb" + str(bbMsg))
-    #         int32
-    #         frame_id
-    #         int32
-    #         frame_timestamp
-    #         bool
-    #         is_keyframe
-    #
-    #         # BB parameters (x,y,width,height)
-    #         float32[]
-    #         bb_x
-    #         float32[]
-    #         bb_y
-    #         float32[]
-    #         bb_width
-    #         float32[]
-    #         bb_height
-    #         # detected class
-    #         string[]
-    #         class_name
-    #         string[]
-    #         object_id
-    #         # detection score
-    #         float32[]
-    #         score
-
         bb_msg = Object_bb_list(frame_id, timestamp, is_keyframe, bb_xs, bb_ys, bb_widths, bb_heights, class_names,
                                     obj_labels, bb_scores)
         self.bb_pub.publish(bb_msg)
@@ -202,8 +147,6 @@ class Detector:
         if not Detector.DETECT_RUNNING:
             Detector.DETECT_RUNNING = True
             self.current_frame_header = msg.header
-            # re-publish image that is worked on
-            self.bb_img_pub.publish(msg)
             # print("Starting detection of frame {}.".format(im_id))
             self.frames_detected += 1
             bridge = CvBridge()
@@ -216,6 +159,9 @@ class Detector:
             self.current_frame = img
             if self.net is not None:
                 self.frame_detect(self.net, img)
+                # re-publish image that is worked on
+                self.bb_img_pub.publish(msg)
+                # publish actual detections
                 self.pub_detections()
 
             # cv2.imwrite("output/f_" + str(im_id) + ".png", img)
