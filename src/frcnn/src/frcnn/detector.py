@@ -10,6 +10,7 @@ sys.path.insert(0, ros_slam_path+"/src/frcnn/src/py-faster-rcnn/lib")
 
 
 import rospy
+from ort_msgs.msg import Object_bb_list
 from ort_msgs.msg import objectBBMsg
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
@@ -22,8 +23,8 @@ import numpy as np
 import caffe, os, cv2
 from threading import Thread, Lock
 
-NMS_THRESH = 0.1
-CONF_THRESH = 0.2
+# NMS_THRESH = 0.1
+CONF_THRESH = 0.7
 
 class Detector:
     DETECT_RUNNING = False
@@ -31,11 +32,12 @@ class Detector:
     def __init__(self, args, nets, classes):
 
         self.nets = nets
-        self.clases = classes
+        self.classes = classes
         self.current_scores = []
         self.current_boxes = []
         self.current_frame = None
-        self.current_frame_id = None
+        self.current_frame_timestamp = None
+        self.current_frame_header = None
         self.frames_detected = 0
         self.detection_start = time.time()
 
@@ -70,53 +72,107 @@ class Detector:
             _, _ = im_detect(self.net, im)
 
         # Create bounding box publisher
-        self.bb_pub = rospy.Publisher('frcnn/bb', objectBBMsg, queue_size=1)
+        self.bb_pub = rospy.Publisher('frcnn/bb', Object_bb_list, queue_size=1)
         self.bb_img_pub = rospy.Publisher('frcnn/bb_img', Image, queue_size=1)
 
         self.detection_start = time.time()
-        # args = [self.net, self.bb_pub]
         self.sub_frames = rospy.Subscriber("/image_raw", Image, self.cb_frame_rec, queue_size=1)
         rospy.spin()
 
     def pub_detections(self):
-        for cls_ind, cls in enumerate(self.clases[1:]):
+        is_keyframe = False
+        timestamp = int(self.current_frame_header.stamp.nsecs)
+        frame_id = self.current_frame_header.frame_id
+
+        bb_xs = []
+        bb_ys = []
+        bb_widths = []
+        bb_heights = []
+        bb_scores = []
+        obj_labels = []
+        class_names = []
+        for cls_ind, cls in enumerate(self.classes[1:]):
             cls_ind += 1  # because we skipped background
             cls_boxes = self.current_boxes[:, 4 * cls_ind:4 * (cls_ind + 1)]
             cls_scores = self.current_scores[:, cls_ind]
-            dets = np.hstack((cls_boxes,
-                              cls_scores[:, np.newaxis])).astype(np.float32)
-            keep = nms(dets, NMS_THRESH)
-            dets = dets[keep, :]
-            self.pub_class_detections(cls, dets, thresh=CONF_THRESH)
+            for i, b in enumerate(cls_boxes):
+                score = cls_scores[i]
+                if score < CONF_THRESH:
+                    continue
+                b_x = b[0]
+                b_y = b[1]
+                b_width = b[2]
+                b_height = b[3]
+                obj_label = ""
+                bb_xs.append(b_x)
+                bb_ys.append(b_y)
+                bb_widths.append(b_width)
+                bb_heights.append(b_height)
+                bb_scores.append(score)
+                obj_labels.append(obj_label)
+                class_names.append(cls)
 
-    def pub_class_detections(self, class_name, dets, thresh=CONF_THRESH):
-        inds = np.where(dets[:, -1] >= thresh)[0]
-        if len(inds) == 0:
-            return
 
-        print("Publishing detection of class " + str(class_name))
 
-        isKeyFrame = False
+            # dets = np.hstack((cls_boxes,
+            #                   cls_scores[:, np.newaxis])).astype(np.float32)
+            # keep = nms(dets, NMS_THRESH)
+            # dets = dets[keep, :]
+            # self.pub_class_detections(cls, dets, thresh=CONF_THRESH)
 
-        class_name = str(class_name)
+    # def pub_class_detections(self, class_name, dets, thresh=CONF_THRESH):
+    #     inds = np.where(dets[:, -1] >= thresh)[0]
+    #     if len(inds) == 0:
+    #         return
+    #
+    #     print("Publishing detection of class " + str(class_name))
+    #
+    #     isKeyFrame = False
+    #
+    #     class_name = str(class_name)
+    #
+    #     highscorebb = None
+    #     highscore = 0
+    #     for i in inds:
+    #         bbox = dets[i, :4]
+    #         score = dets[i, -1]
+    #         if score > highscore:
+    #             highscorebb = bbox
+    #             highscore = score
+    #
+    #
+    #     print("publishing bb" + str(bbMsg))
+    #         int32
+    #         frame_id
+    #         int32
+    #         frame_timestamp
+    #         bool
+    #         is_keyframe
+    #
+    #         # BB parameters (x,y,width,height)
+    #         float32[]
+    #         bb_x
+    #         float32[]
+    #         bb_y
+    #         float32[]
+    #         bb_width
+    #         float32[]
+    #         bb_height
+    #         # detected class
+    #         string[]
+    #         class_name
+    #         string[]
+    #         object_id
+    #         # detection score
+    #         float32[]
+    #         score
 
-        highscorebb = None
-        highscore = 0
-        for i in inds:
-            bbox = dets[i, :4]
-            score = dets[i, -1]
-            if score > highscore:
-                highscorebb = bbox
-                highscore = score
-
-        bbMsg = objectBBMsg(self.current_frame_id, isKeyFrame, highscorebb, class_name, highscore)
-        print("publishing bb" + str(bbMsg))
-
-        self.bb_pub.publish(bbMsg)
+        bb_msg = Object_bb_list(frame_id, timestamp, is_keyframe, bb_xs, bb_ys, bb_widths, bb_heights, class_names,
+                                    obj_labels, bb_scores)
+        self.bb_pub.publish(bb_msg)
 
     def frame_detect(self, net, im):
         """Detect object classes in an image using pre-computed object proposals."""
-        # global current_scores, current_boxes
         # Detect all object classes and regress object bounds
         timer = Timer()
         timer.tic()
@@ -126,8 +182,8 @@ class Detector:
                '{:d} object proposals').format(timer.total_time, self.current_boxes.shape[0])
 
     def fake_detect(self, fname="pics/kf_20542.png",net=None):
-        global NEW_DETECTION, current_kf, current_kf_id
-        NEW_DETECTION = True
+        # global NEW_DETECTION, current_kf, current_kf_id
+        # NEW_DETECTION = True
         try:
             open(fname)
         except OSError as e:
@@ -136,18 +192,17 @@ class Detector:
                 exit(1)
             else:
                 raise
-        current_kf = cv2.imread(fname)
+        # current_kf = cv2.imread(fname)
         #
-        current_kf_id = "fake_detect_frame"
+        # current_kf_id = "fake_detect_frame"
         if net is not None:
             self.frame_detect(net)
 
     def deserialize_and_detect_thread(self, msg):
-        im_id = msg.header.seq
         if not Detector.DETECT_RUNNING:
             Detector.DETECT_RUNNING = True
+            self.current_frame_header = msg.header
             # re-publish image that is worked on
-            msg.header.seq = self.current_frame_id
             self.bb_img_pub.publish(msg)
             # print("Starting detection of frame {}.".format(im_id))
             self.frames_detected += 1
@@ -159,12 +214,11 @@ class Detector:
                 img = np.swapaxes(img, 0, 2)
                 img = np.swapaxes(img, 1, 0)
             self.current_frame = img
-            self.current_frame_id = im_id
             if self.net is not None:
                 self.frame_detect(self.net, img)
                 self.pub_detections()
 
-            cv2.imwrite("output/f_" + str(im_id) + ".png", img)
+            # cv2.imwrite("output/f_" + str(im_id) + ".png", img)
             now = time.time()
             detection_time = now - self.detection_start
             fps = self.frames_detected / detection_time
@@ -176,7 +230,7 @@ class Detector:
             pass
 
     def cb_frame_rec(self, msg):
-        im_id = msg.header.seq
+        # im_id = msg.header.seq
         # print("Frame {} received".format(im_id))
         # self.deserialize_and_detect_thread(msg)
         t = Thread(target=self.deserialize_and_detect_thread, args=[msg])

@@ -44,7 +44,8 @@ find_package(catkin REQUIRED COMPONENTS
 
 add_message_files(
     DIRECTORY msg
-    FILES objectBBMsg.msg
+    FILES objectBBMsg.msg Object_bb_list.msg
+
 )
 generate_messages(
     DEPENDENCIES
