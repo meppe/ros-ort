@@ -22,17 +22,23 @@ from utils.timer import Timer
 import numpy as np
 import caffe, os, cv2
 from threading import Thread, Lock
+import os
 
 # NMS_THRESH = 0.1
-CONF_THRESH = 0.7
+CONF_THRESH = 0.6
 
 class Detector:
     DETECT_RUNNING = False
 
-    def __init__(self, args, nets, classes):
+    def __init__(self, args, models):
 
-        self.nets = nets
-        self.classes = classes
+        self.models = models
+        model_net = args.model.split("--")
+        model = model_net[0]
+        net = model_net[1]
+        model_info = self.models[model]
+        self.classes = model_info[3]
+        # self.nets = model_info[4]
         self.current_scores = []
         self.current_boxes = []
         self.current_frame = None
@@ -48,13 +54,26 @@ class Detector:
         print("node initialized")
         cfg.TEST.HAS_RPN = True  # Use RPN for proposals
 
-        prototxt = os.path.join(cfg.MODELS_DIR, self.nets[args.demo_net][0],
-                                'faster_rcnn_alt_opt', 'faster_rcnn_test.pt')
-        caffemodel = os.path.join(cfg.DATA_DIR, 'faster_rcnn_models',
-                                  self.nets[args.demo_net][1])
+        models_dir = "models/" + self.models[model][0]
+        model_net_dir = self.models[model][4][net][0]
+        model_subdir = self.models[model][1]
+        model_pt_file = self.models[model][2]
+        # prototxt = os.path.join(cfg.MODELS_DIR, self.nets[args.net][0],
+        #                         'faster_rcnn_alt_opt', 'faster_rcnn_test.pt')
+        # caffemodel = os.path.join(cfg.DATA_DIR, 'faster_rcnn_models',
+        #                           self.nets[args.net][1])
+        frcnn_path = os.getcwd() + "/src/frcnn/src/py-faster-rcnn"
+        prototxt = os.path.join(frcnn_path, models_dir, model_net_dir,
+                                model_subdir, model_pt_file)
+
+        caffemodel = os.path.join(frcnn_path, 'data', self.models[model][4][net][1])
         if not os.path.isfile(caffemodel):
             raise IOError(('{:s} not found.\nDid you run ./data/script/'
                            'fetch_faster_rcnn_models.sh?').format(caffemodel))
+
+        if not os.path.isfile(prototxt):
+            raise IOError(("{:s} not found.\nMaybe this model is incompatible with the "
+                           "respective network you chose.").format(caffemodel))
         if args.cpu_mode:
             caffe.set_mode_cpu()
         else:
@@ -76,7 +95,7 @@ class Detector:
         self.bb_img_pub = rospy.Publisher('frcnn/bb_img', Image, queue_size=1)
 
         self.detection_start = time.time()
-        self.sub_frames = rospy.Subscriber("/image_raw", Image, self.cb_frame_rec, queue_size=10)
+        self.sub_frames = rospy.Subscriber("/frcnn_input/image_raw", Image, self.cb_frame_rec, queue_size=10)
         rospy.spin()
 
     def pub_detections(self):
@@ -91,12 +110,15 @@ class Detector:
         bb_scores = []
         obj_labels = []
         class_names = []
+        max_score = 0
         for cls_ind, cls in enumerate(self.classes[1:]):
             cls_ind += 1  # because we skipped background
             cls_boxes = self.current_boxes[:, 4 * cls_ind:4 * (cls_ind + 1)]
             cls_scores = self.current_scores[:, cls_ind]
             for i, b in enumerate(cls_boxes):
                 score = cls_scores[i]
+                max_score = max(max_score, score)
+                print max_score
                 if score < CONF_THRESH:
                     continue
                 b_x = b[0]
@@ -125,23 +147,6 @@ class Detector:
         timer.toc()
         print ('Detection took {:.3f}s for '
                '{:d} object proposals').format(timer.total_time, self.current_boxes.shape[0])
-
-    def fake_detect(self, fname="pics/kf_20542.png",net=None):
-        # global NEW_DETECTION, current_kf, current_kf_id
-        # NEW_DETECTION = True
-        try:
-            open(fname)
-        except OSError as e:
-            if e.errno == errno.ENOENT:
-                print("File not found")
-                exit(1)
-            else:
-                raise
-        # current_kf = cv2.imread(fname)
-        #
-        # current_kf_id = "fake_detect_frame"
-        if net is not None:
-            self.frame_detect(net)
 
     def deserialize_and_detect_thread(self, msg):
         if not Detector.DETECT_RUNNING:
@@ -176,9 +181,6 @@ class Detector:
             pass
 
     def cb_frame_rec(self, msg):
-        # im_id = msg.header.seq
-        # print("Frame {} received".format(im_id))
-        # self.deserialize_and_detect_thread(msg)
         t = Thread(target=self.deserialize_and_detect_thread, args=[msg])
         t.start()
 

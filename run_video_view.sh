@@ -3,7 +3,7 @@
 xhost +local:`docker inspect --format='{{ .Config.Hostname }}' ros_video_view` 
 docker run \
 --rm \
--v /$(pwd):/opt/semslam \
+-v /$(pwd):/opt/ros-ort \
 -it \
 --workdir="//opt/ros-ort" \
 --link roscore_kinetic \
@@ -13,5 +13,5 @@ docker run \
     --env="QT_X11_NO_MITSHM=1" \
     --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
 meppe78/ros-kinetic-image-view \
-bash -c 'rosrun image_view image_view image:=/image_raw'
+bash -c 'rosrun image_view image_view image:=/frcnn_input/image_raw'
 xhost -local:`docker inspect --format='{{ .Config.Hostname }}' ros_video_view`

@@ -16,5 +16,5 @@ nvidia-docker run \
 --name ros_frcnn_detect \
 --entrypoint="/frcnn_entrypoint.sh" \
 meppe78/ros-kinetic-frcnn \
-bash -c "source '/opt/ros/kinetic/setup.bash' && source '/opt/ros-ort/devel/setup.bash' && python src/frcnn/scripts/run_detect.py --cpu"
+bash -c "source '/opt/ros/kinetic/setup.bash' && source '/opt/ros-ort/devel/setup.bash' && python src/frcnn/scripts/run_detect.py --cpu --model pascal--zf"
 xhost -local:`docker inspect --format='{{ .Config.Hostname }}' ros_frcnn_detect`
