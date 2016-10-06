@@ -154,7 +154,6 @@ class KalmanTracker:
         im = self.current_frame[:, :, (2, 1, 0)]
         fig, ax = plt.subplots(figsize=(12, 12))
         ax.imshow(im, aspect='equal')
-        num_detections = 0
         for class_name in bbs:
             for i, label in enumerate(bbs[class_name]["labels"]):
                 bbox = bbs[class_name]["bboxes"][i]

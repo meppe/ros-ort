@@ -76,7 +76,7 @@ class Detector:
         self.bb_img_pub = rospy.Publisher('frcnn/bb_img', Image, queue_size=1)
 
         self.detection_start = time.time()
-        self.sub_frames = rospy.Subscriber("/image_raw", Image, self.cb_frame_rec, queue_size=1)
+        self.sub_frames = rospy.Subscriber("/image_raw", Image, self.cb_frame_rec, queue_size=10)
         rospy.spin()
 
     def pub_detections(self):
