@@ -1,5 +1,5 @@
 #!/bin/bash
-docker rm ros_frcnn_visualize
+docker rm ros_frcnn_tracking
 xhost +local:`docker inspect --format='{{ .Config.Hostname }}' ros_frcnn_tracking` 
 docker run \
 --rm \
