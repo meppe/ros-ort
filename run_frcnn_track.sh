@@ -1,7 +1,7 @@
 #!/bin/bash
 docker rm ros_frcnn_visualize
 xhost +local:`docker inspect --format='{{ .Config.Hostname }}' ros_frcnn_tracking` 
-nvidia-docker run \
+docker run \
 --rm \
 -v /$(pwd)/src/frcnn:/opt/ros-ort/src/frcnn \
 -v /$(pwd)/src/ort_msgs:/opt/ros-ort/src/ort_msgs \
