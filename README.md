@@ -2,7 +2,9 @@
 
 This repo contains start scripts, and code to run dockerized object recognition and tracking based on ROS. Docker images are based on Ubuntu 16.04 and ROS kinetic. Object detection is based on FRCNN. Scripts have been tested on Ubuntu 14.04 and 16.04.
 
-The system consists of several ROS nodes that each run as a separate docker container. When running for the first time, docker will download the images which can be quite big, so this will take a while. Before running, make sure that you have installed Docker (on Ubuntu 16.04 do ```sudo apt-get install docker```) and nvidia-docker as described here: https://github.com/NVIDIA/nvidia-docker. To be able to run Docker without superuse privileges, you must also add your user to the docker group, as described here: http://askubuntu.com/questions/477551/how-can-i-use-docker-without-sudo.
+The system consists of several ROS nodes that each run as a separate docker container. When running for the first time, docker will download the images which can be quite big, so this will take a while. Before running, make sure that you have installed Docker (on Ubuntu 16.04 do ```sudo apt-get install docker```) and nvidia-docker as described here: https://github.com/NVIDIA/nvidia-docker. To be able to run Docker without superuse privileges, you must also add your user to the docker group, as described here: http://askubuntu.com/questions/477551/how-can-i-use-docker-without-sudo. For Ubuntu 14.04 it is recommended to not use the docker that comes with Ubunut, but install docker from here: https://docs.docker.com/engine/installation/linux/ubuntulinux/
+
+For nvidia-docker you need an NVIDIA-driver and a GPU. If you want to use a CPU only, exchamge the ```nvidia-docker``` command in the shell scripts with simply ```docker```
 
 1. ROS core
 	The ROS core node. Start by running the script ```./run_roscore.sh```
