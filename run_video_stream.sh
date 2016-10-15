@@ -1,5 +1,5 @@
 #!/bin/bash
-# docker rm ros_video_stream
+docker rm ros_video_stream
 xhost +local:`docker inspect --format='{{ .Config.Hostname }}' ros_video_stream` 
 docker run \
 --rm \
