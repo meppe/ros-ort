@@ -8,6 +8,8 @@ The system consists of several ROS nodes that each run as a separate docker cont
 
 For nvidia-docker you need an NVIDIA-driver and a GPU. If you want to use a CPU only, exchamge the ```nvidia-docker``` command in the shell scripts with simply ```docker```
 
+Once you have met the above extrendencies, clone this repository and initialize the submodules using ```git submodule update --init --recursive``. 
+
 1. ROS core
 	The ROS core node. Start by running the script ```./run_roscore.sh```
 
