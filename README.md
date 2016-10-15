@@ -1,4 +1,6 @@
-# ros-ort
+# ros-ort -- Object Detection and Tracking for ROS.
+
+Note that this is work in progress. It should work when you follow the instructions below but that is not guaranteed. This work is based on py-faster-rcnn, which is available here: https://github.com/rbgirshick/py-faster-rcnn
 
 This repo contains start scripts, and code to run dockerized object recognition and tracking based on ROS. Docker images are based on Ubuntu 16.04 and ROS kinetic. Object detection is based on FRCNN. Scripts have been tested on Ubuntu 14.04 and 16.04.
 
