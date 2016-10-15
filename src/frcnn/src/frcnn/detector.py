@@ -118,7 +118,7 @@ class Detector:
             for i, b in enumerate(cls_boxes):
                 score = cls_scores[i]
                 max_score = max(max_score, score)
-                print max_score
+                # print max_score
                 if score < CONF_THRESH:
                     continue
                 b_x = b[0]

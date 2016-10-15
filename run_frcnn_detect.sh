@@ -2,6 +2,7 @@
 docker rm ros_frcnn_detect
 xhost +local:`docker inspect --format='{{ .Config.Hostname }}' ros_frcnn_detect` 
 if [ "$1" = "--gpu" ]; then
+	echo "Running nvidia-docker with GPU"
 	nvidia-docker run \
 	--rm \
 	-v /$(pwd)/src/frcnn:/opt/ros-ort/src/frcnn \
@@ -19,6 +20,7 @@ if [ "$1" = "--gpu" ]; then
 	meppe78/ros-kinetic-frcnn \
 	bash -c "source '/opt/ros/kinetic/setup.bash' && source '/opt/ros-ort/devel/setup.bash' && python src/frcnn/scripts/run_detect.py --model pascal--zf"
 else
+	echo "Running docker with CPU"
 	docker run \
 	--rm \
 	-v /$(pwd)/src/frcnn:/opt/ros-ort/src/frcnn \
