@@ -6,7 +6,7 @@ docker run \
 -v /$(pwd):/opt/ros-ort \
 -it \
 --workdir="//opt/ros-ort" \
---link roscore_kinetic \
+--link roscore_kinetic:latest \
 --name ros_video_view \
 -e ROS_MASTER_URI=http://roscore_kinetic:11311/ \
     --env="DISPLAY" \
