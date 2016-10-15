@@ -15,7 +15,7 @@ For nvidia-docker you need an NVIDIA-driver and a GPU. If you want to use a CPU 
 	This is optional and opens a window that shows the original input video stream. Start by running the script ```./run_video_view.sh```. It will subscribe to the topic frcnn_input/camera_raw. 
 	
 3. Object detection
-	This runs the Faster-RCNN-based object detection. Start by running the script ```./run_frcnn_detect.sh```. It will subscribe to the topic /frcnn_input/camera_raw, and it will publish the topic /frcnn/bb for the bounding box information and the topic /frcnn/bb_img to re-publish those video frames from the input stream which haven been processed. The frequency depends on the processing speed. Without a GPU around 0.1 -- 0.2 Hz.
+	This runs the Faster-RCNN-based object detection. Start by running the script ```./run_frcnn_detect.sh``` for CPU use or ```./run_frcnn_detect.sh --gpu``` for running it on your GPU. It will subscribe to the topic /frcnn_input/camera_raw, and it will publish the topic /frcnn/bb for the bounding box information and the topic /frcnn/bb_img to re-publish those video frames from the input stream which haven been processed. The frequency depends on the processing speed. Without a GPU around 0.1 -- 0.2 Hz.
 	
 4. Object tracking
 	This runs the tracking. It clusters the bounding boxes delivered by the detector (subscribes to topics /frcnn/bb and /frcnn/bb_img) and assigns labels. The results are published on topic /frcnn/bb_img_tracking. 
