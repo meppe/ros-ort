@@ -13,7 +13,7 @@ from math import isnan
 
 
 ### KALMAN TRACKER NOT YET WORKING PROPERLY!!!!
-### Right now, it only uses tracking by detection. 
+### Right now, it only uses tracking by detection.
 
 class KalmanBoxTracker(object):
     """
