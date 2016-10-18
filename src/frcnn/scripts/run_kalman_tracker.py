@@ -15,6 +15,8 @@ See README.md for installation instructions before running.
 
 import argparse
 
+### KALMAN TRACKER NOT YET WORKING PROPERLY!!!!
+
 from frcnn.kalman_tracker import KalmanTracker
 
 if __name__ == '__main__':

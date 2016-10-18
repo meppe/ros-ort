@@ -11,6 +11,10 @@ from filterpy.kalman import KalmanFilter
 from sklearn.utils.linear_assignment_ import linear_assignment
 from math import isnan
 
+
+### KALMAN TRACKER NOT YET WORKING PROPERLY!!!!
+### Right now, it only uses tracking by detection. 
+
 class KalmanBoxTracker(object):
     """
     This class represents the internel state of individual tracked objects observed as bbox.
