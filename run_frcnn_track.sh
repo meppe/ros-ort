@@ -16,5 +16,5 @@ docker run \
 --name ros_frcnn_tracking \
 --entrypoint="/frcnn_entrypoint.sh" \
 meppe78/ros-kinetic-frcnn \
-bash -c "source '/opt/ros/kinetic/setup.bash' && source '/opt/ros-ort/devel/setup.bash' && python src/frcnn/scripts/run_detection_track.py"
+bash -c "source '/opt/ros/kinetic/setup.bash' && source '/opt/ros-ort/devel/setup.bash' && python src/frcnn/scripts/run_detection_tracker.py"
 xhost -local:`docker inspect --format='{{ .Config.Hostname }}' ros_frcnn_tracking`
