@@ -1,6 +1,6 @@
-import numpy as np
 import matplotlib
 matplotlib.use('Agg')
+import numpy as np
 import matplotlib.pyplot as plt
 import rospy
 from ort_msgs.msg import Object_bb_list
@@ -8,6 +8,7 @@ from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 from sklearn.cluster import AffinityPropagation
 from math import isnan
+
 
 class Tracker:
 
@@ -51,7 +52,7 @@ class Tracker:
         last_detected_frame = self.img_stream_queue[self.last_detected_bb_timestamp]
         # self.vis_tracking(last_detected_frame, self.last_detected_bbs, write_img=False)
         self.vis_tracking(last_detected_frame, self.last_detected_bb_clusters, write_img=False)
-    # 
+
     def vis_tracking(self, im, bbs, write_img=False):
         fig, ax = plt.subplots(figsize=(12, 12))
         ax.imshow(im, aspect='equal')
@@ -142,7 +143,7 @@ class Tracker:
                 # nan as label happens by AffinityPropagation if only one occurrence for a given class is found.
                 if isnan(l):
                     l = 0
-                clustered_bb_labels[idx]= cls + "_" + str(l)
+                clustered_bb_labels[idx] = cls + "_" + str(l)
 
             if len(af.cluster_centers_.shape) == 2:
                 clustered_bbs = af.cluster_centers_
@@ -152,32 +153,28 @@ class Tracker:
                 clustered_bbs = np.reshape(clustered_bbs, (1, 4))
 
             for idx, bb in enumerate(clustered_bbs):
-                id = clustered_bb_labels[idx]
-                bb_clusters_by_id[id] = {}
-                bb_clusters_by_id[id]["bbox"] = bb
-                bb_clusters_by_id[id]["score"] = 1
-                bb_clusters_by_id[id]["label"] = id
-                bb_clusters_by_id[id]["class"] = cls
-                bb_clusters_by_id[id]["timestamp"] = timestamp
+                obj_id = clustered_bb_labels[idx]
+                bb_clusters_by_id[obj_id] = {}
+                bb_clusters_by_id[obj_id]["bbox"] = bb
+                bb_clusters_by_id[obj_id]["score"] = 1
+                bb_clusters_by_id[obj_id]["label"] = obj_id
+                bb_clusters_by_id[obj_id]["class"] = cls
+                bb_clusters_by_id[obj_id]["timestamp"] = timestamp
 
         return bb_clusters_by_id
 
     def __init__(self):
-        """
-        Sets key parameters for SORT
-        """
+
         print("Initializing the Tracker")
         self.last_detected_bbs = {}
         self.last_detected_bb_clusters = {}
-        self.current_tracked_bbs = {}
+        self.last_detected_bb_timestamp = None
         self.cv_bridge = CvBridge()
         self.img_stream_queue = {}
-
 
         rospy.init_node("frcnn_tracker")
         # Subscribe to bb and image
         self.sub_bb = rospy.Subscriber("/frcnn/bb", Object_bb_list, self.cb_bb_rec, queue_size=1)
         self.sub_camera_raw = rospy.Subscriber("/frcnn_input/image_raw", Image, self.cb_camera_raw, queue_size=1)
         self.bb_img_pub = rospy.Publisher('/frcnn/bb_img_tracking', Image, queue_size=1)
-
         rospy.spin()
