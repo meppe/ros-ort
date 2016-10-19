@@ -49,8 +49,9 @@ class Tracker:
             print ("Warning, timestamp not found in image queue!")
             return
         last_detected_frame = self.img_stream_queue[self.last_detected_bb_timestamp]
+        # self.vis_tracking(last_detected_frame, self.last_detected_bbs, write_img=False)
         self.vis_tracking(last_detected_frame, self.last_detected_bb_clusters, write_img=False)
-
+    # 
     def vis_tracking(self, im, bbs, write_img=False):
         fig, ax = plt.subplots(figsize=(12, 12))
         ax.imshow(im, aspect='equal')

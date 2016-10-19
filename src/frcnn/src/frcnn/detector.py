@@ -36,7 +36,6 @@ class Detector:
         net = model_net[1]
         model_info = self.models[model]
         self.classes = model_info[3]
-        # self.nets = model_info[4]
         self.current_scores = []
         self.current_boxes = []
         self.current_frame = None
@@ -56,10 +55,6 @@ class Detector:
         model_net_dir = self.models[model][4][net][0]
         model_subdir = self.models[model][1]
         model_pt_file = self.models[model][2]
-        # prototxt = os.path.join(cfg.MODELS_DIR, self.nets[args.net][0],
-        #                         'faster_rcnn_alt_opt', 'faster_rcnn_test.pt')
-        # caffemodel = os.path.join(cfg.DATA_DIR, 'faster_rcnn_models',
-        #                           self.nets[args.net][1])
         frcnn_path = os.getcwd() + "/src/frcnn/src/py-faster-rcnn"
         prototxt = os.path.join(frcnn_path, models_dir, model_net_dir,
                                 model_subdir, model_pt_file)
@@ -80,7 +75,6 @@ class Detector:
             cfg.GPU_ID = args.gpu_id
 
         self.net = caffe.Net(prototxt, caffemodel, caffe.TEST)
-        # net = None
 
         print '\n\nLoaded network {:s}'.format(caffemodel)
         # Warmup on a dummy image
