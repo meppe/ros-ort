@@ -123,17 +123,16 @@ class Detector:
                 b_y = b[1]
                 b_width = b[2]
                 b_height = b[3]
-                obj_label = ""
                 bb_xs.append(b_x)
                 bb_ys.append(b_y)
                 bb_widths.append(b_width)
                 bb_heights.append(b_height)
                 bb_scores.append(score)
-                obj_labels.append(obj_label)
+                obj_labels.append(cls+"_"+str(i))
                 class_names.append(cls)
 
         bb_msg = Object_bb_list(frame_id, timestamp, is_keyframe, bb_xs, bb_ys, bb_widths, bb_heights, class_names,
-                                    obj_labels, bb_scores)
+                                obj_labels, bb_scores)
         self.bb_pub.publish(bb_msg)
 
     def frame_detect(self, net, im):

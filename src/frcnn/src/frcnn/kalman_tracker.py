@@ -129,7 +129,7 @@ class KalmanTracker:
 
         # self.vis_tracking(self.current_tracked_bbs, write_img=False)
         self.vis_tracking(self.current_clustered_bbs, write_img=False)
-        # self.vis_tracking(self.current_bbs, write_img=False)
+        # self.vis_tracking(self.last_detected_bbs, write_img=False)
 
     def track_bbs(self, bbs):
         dets = []

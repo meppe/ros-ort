@@ -16,5 +16,6 @@ nvidia-docker run \
 --name ros_frcnn_tracking \
 --entrypoint="/frcnn_entrypoint.sh" \
 meppe78/ros-kinetic-frcnn-tracker \
-bash -c "source '/opt/ros/kinetic/setup.bash' && source '/opt/ros-ort/devel/setup.bash' && python src/frcnn/scripts/run_dlib_tracker.py"
+bash
+# bash -c "source '/opt/ros/kinetic/setup.bash' && source '/opt/ros-ort/devel/setup.bash' && python src/frcnn/scripts/run_dlib_tracker.py"
 xhost -local:`docker inspect --format='{{ .Config.Hostname }}' ros_frcnn_tracking`

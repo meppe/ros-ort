@@ -72,7 +72,7 @@ class DlibTracker:
                     drectangle = dlib.rectangle(int(drbbox[0]), int(drbbox[1]), int(drbbox[2]), int(drbbox[3]))
                     self.trackers[label].start_track(self.last_detected_frame, drectangle)
 
-        # self.vis_tracking(self.last_clustered_bbs, write_img=False)
+        # self.vis_tracking(self.last_detected_bb_clusters, write_img=False)
 
     def cb_camera_raw(self, msg):
         cv_image = self.cv_bridge.imgmsg_to_cv2(msg, msg.encoding)
