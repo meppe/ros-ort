@@ -155,7 +155,7 @@ class KalmanTracker:
                 self.current_tracked_bbs[class_name]["classes"].append(class_name)
 
     def vis_tracking(self, bbs, write_img=False):
-        # im = self.current_frame[:, :, (2, 1, 0)]
+        # im = self.last_detected_frame[:, :, (2, 1, 0)]
         im = self.current_frame
         fig, ax = plt.subplots(figsize=(12, 12))
         ax.imshow(im, aspect='equal')

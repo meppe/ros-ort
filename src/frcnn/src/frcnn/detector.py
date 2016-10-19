@@ -11,17 +11,15 @@ sys.path.insert(0, ros_slam_path+"/src/frcnn/src/py-faster-rcnn/lib")
 
 import rospy
 from ort_msgs.msg import Object_bb_list
-from ort_msgs.msg import objectBBMsg
 from sensor_msgs.msg import Image
-from cv_bridge import CvBridge, CvBridgeError
+from cv_bridge import CvBridge
 
 from fast_rcnn.config import cfg
 from fast_rcnn.test import im_detect
-from fast_rcnn.nms_wrapper import nms
 from utils.timer import Timer
 import numpy as np
-import caffe, os, cv2
-from threading import Thread, Lock
+import caffe
+from threading import Thread
 import os
 
 # NMS_THRESH = 0.1
