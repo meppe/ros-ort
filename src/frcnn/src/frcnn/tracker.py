@@ -25,6 +25,7 @@ class Tracker:
         img = self.img_msg_2_numpy_img(msg)
         timestamp = int(msg.header.stamp.nsecs)
         self.img_stream_queue[timestamp] = img
+        self.vis_tracking(img, self.last_detected_bb_clusters, write_img=False)
 
     def cb_bb_rec(self, msg):
 
@@ -49,9 +50,9 @@ class Tracker:
         if self.last_detected_bb_timestamp not in self.img_stream_queue.keys():
             print ("Warning, timestamp not found in image queue!")
             return
-        last_detected_frame = self.img_stream_queue[self.last_detected_bb_timestamp]
+        # last_detected_frame = self.img_stream_queue[self.last_detected_bb_timestamp]
         # self.vis_tracking(last_detected_frame, self.last_detected_bbs, write_img=False)
-        self.vis_tracking(last_detected_frame, self.last_detected_bb_clusters, write_img=False)
+        # self.vis_tracking(last_detected_frame, self.last_detected_bb_clusters, write_img=False)
 
     def vis_tracking(self, im, bbs, write_img=False):
         fig, ax = plt.subplots(figsize=(12, 12))
@@ -136,7 +137,7 @@ class Tracker:
                 return
             bbs = np.asarray(bbs_by_cls["bboxes"])
             timestamp = bbs_by_cls["timestamps"][0]
-            af = AffinityPropagation(preference=-20000)
+            af = AffinityPropagation(preference=-12000)
             af.fit(bbs)
             clustered_bb_labels = {}
             for idx, l in enumerate(af.labels_):
