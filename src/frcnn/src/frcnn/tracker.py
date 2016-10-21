@@ -6,9 +6,9 @@ import rospy
 from ort_msgs.msg import Object_bb_list
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
-from sklearn.cluster import AffinityPropagation
+from sklearn.cluster import AffinityPropagation, MeanShift
 from math import isnan
-
+import time
 
 class Tracker:
 
@@ -23,9 +23,17 @@ class Tracker:
 
     def cb_camera_raw(self, msg):
         img = self.img_msg_2_numpy_img(msg)
-        timestamp = int(msg.header.stamp.nsecs)
+        # time = msg.header.stamp
+        # timestamp = int(time.secs * 1000000000 + time.nsecs)
+        timestamp = msg.header.seq
         self.img_stream_queue[timestamp] = img
-        self.vis_tracking(img, self.last_detected_bb_clusters, write_img=False)
+        self.update_trackers(img, timestamp)
+        self.vis_tracking(img, self.current_bbs, write_img=False)
+
+    # This method is meant to update self.current_bbs. This method should be overwritten for more sophisticated trackers.
+    # In this simple case, we just copy the clustered BBs.
+    def update_trackers(self, img, timestamp):
+        self.current_bbs = self.last_detected_bbs
 
     def cb_bb_rec(self, msg):
 
@@ -33,26 +41,34 @@ class Tracker:
 
         self.last_detected_bb_timestamp = int(msg.frame_timestamp)
 
-        self.last_detected_bb_clusters = Tracker.cluster_bbs(self.last_detected_bbs)
+        # self.last_detected_bb_clusters = Tracker.cluster_bbs(self.last_detected_bbs)
 
-        self.do_tracking()
+        self.align_detections_and_trackers(self.last_detected_bbs)
 
         # clean up input data queue and remove all frames at and before the last detection.
 
+        print("Deleting frames up to {}.".format(self.last_detected_bb_timestamp))
         for t in sorted(self.img_stream_queue.keys()):
             if t <= self.last_detected_bb_timestamp:
                 del self.img_stream_queue[t]
+                # print("Deleting {}".format(t))
             else:
                 break
 
-    def do_tracking(self):
+    # This is meant to align the newly detected bbs with the existing ones from the tracking. This method should be overwritten for more sophisticated tracking.
+    def align_detections_and_trackers(self, bbs):
         # By default, just visualize the last detected bbs. Overwrite this function for advanced tracking!
-        if self.last_detected_bb_timestamp not in self.img_stream_queue.keys():
-            print ("Warning, timestamp not found in image queue!")
-            return
-        # last_detected_frame = self.img_stream_queue[self.last_detected_bb_timestamp]
-        # self.vis_tracking(last_detected_frame, self.last_detected_bbs, write_img=False)
-        # self.vis_tracking(last_detected_frame, self.last_detected_bb_clusters, write_img=False)
+        for k in sorted(self.img_stream_queue.keys()):
+            if self.last_detected_bb_timestamp >= k:
+                print ("{} is the keyframe closest to the received keyframe {}".format(k, self.last_detected_bb_timestamp))
+                print("Difference is {}".format(abs(k - self.last_detected_bb_timestamp)))
+                return
+        # if self.last_detected_bb_timestamp not in self.img_stream_queue.keys():
+        #     print ("img queue")
+        #     for k in sorted(self.img_stream_queue.keys()):
+        #         print (k)
+        #     print ("Frame {} not found in image queue! -- Warning!".format(self.last_detected_bb_timestamp))
+        #     return
 
     def vis_tracking(self, im, bbs, write_img=False):
         fig, ax = plt.subplots(figsize=(12, 12))
@@ -136,23 +152,26 @@ class Tracker:
             if num_cls_bbs == 0:
                 return
             bbs = np.asarray(bbs_by_cls["bboxes"])
+            print("Number of bbs for {}: {}".format(cls, str(len(bbs))))
             timestamp = bbs_by_cls["timestamps"][0]
-            af = AffinityPropagation(preference=-12000)
-            af.fit(bbs)
+            clustering_algo = AffinityPropagation(preference=-12000)
+            # clustering_algo = MeanShift()
+            clustering_algo.fit(bbs)
+
             clustered_bb_labels = {}
-            for idx, l in enumerate(af.labels_):
-                # nan as label happens by AffinityPropagation if only one occurrence for a given class is found.
+            for idx, l in enumerate(clustering_algo.labels_):
+                clustered_bbs = clustering_algo.cluster_centers_
+                # nan as label happens with AffinityPropagation if only one occurrence for a given class is found. In that case, also the shape of the bbs is wrong.
                 if isnan(l):
                     l = 0
                 clustered_bb_labels[idx] = cls + "_" + str(l)
 
-            if len(af.cluster_centers_.shape) == 2:
-                clustered_bbs = af.cluster_centers_
-            else:
-                # Wrong array shape happens by AffinityPropagation if only one occurrence for a given class is found.
-                clustered_bbs = af.cluster_centers_
-                clustered_bbs = np.reshape(clustered_bbs, (1, 4))
+            # Often, if the above nan case holds, the shape of the bbs are also wrong. This is corrected below:
+            if len(clustering_algo.cluster_centers_.shape) == 3:
+                n_bbs = clustered_bbs.shape[1]
+                clustered_bbs = np.reshape(clustered_bbs, (n_bbs, 4))
 
+            # Now sort clusters by object label again.
             for idx, bb in enumerate(clustered_bbs):
                 obj_id = clustered_bb_labels[idx]
                 bb_clusters_by_id[obj_id] = {}
@@ -170,12 +189,13 @@ class Tracker:
         self.last_detected_bbs = {}
         self.last_detected_bb_clusters = {}
         self.last_detected_bb_timestamp = None
+        self.current_bbs = {}
         self.cv_bridge = CvBridge()
         self.img_stream_queue = {}
 
         rospy.init_node("frcnn_tracker")
         # Subscribe to bb and image
         self.sub_bb = rospy.Subscriber("/frcnn/bb", Object_bb_list, self.cb_bb_rec, queue_size=1)
-        self.sub_camera_raw = rospy.Subscriber("/frcnn_input/image_raw", Image, self.cb_camera_raw, queue_size=1)
+        self.sub_camera_raw = rospy.Subscriber("/frcnn_input/image_raw", Image, self.cb_camera_raw, queue_size=100)
         self.bb_img_pub = rospy.Publisher('/frcnn/bb_img_tracking', Image, queue_size=1)
         rospy.spin()

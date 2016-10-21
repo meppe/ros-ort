@@ -43,6 +43,8 @@ class Detector:
         self.current_frame_header = None
         self.frames_detected = 0
         self.detection_start = time.time()
+        # The first frame's header secs timestamp.
+        # self.start_secs = 0
 
         self.CONF_THRESH = 0.2
         self.NMS_THRESH = 0.1
@@ -92,7 +94,10 @@ class Detector:
 
     def pub_detections(self):
         is_keyframe = False
-        timestamp = int(self.current_frame_header.stamp.nsecs)
+        time = self.current_frame_header.stamp
+        # timestamp = int(time.secs * 1000000000 + time.nsecs)
+        timestamp = self.current_frame_header.seq
+        # print("Publishing bb with timestamp {}".format(timestamp))
         frame_id = self.current_frame_header.frame_id
 
         bb_xs = []
@@ -143,7 +148,7 @@ class Detector:
         if not Detector.DETECT_RUNNING:
             Detector.DETECT_RUNNING = True
             self.current_frame_header = msg.header
-            # print("Starting detection of frame {}.".format(im_id))
+            print("Starting detection of frame with timestamp {}.".format(msg.header.stamp))
             self.frames_detected += 1
             bridge = CvBridge()
             cv_image = bridge.imgmsg_to_cv2(msg, msg.encoding)
@@ -160,7 +165,6 @@ class Detector:
                 # publish actual detections
                 self.pub_detections()
 
-            # cv2.imwrite("output/f_" + str(im_id) + ".png", img)
             now = time.time()
             detection_time = now - self.detection_start
             fps = self.frames_detected / detection_time

@@ -6,7 +6,6 @@ import dlib
 
 class DlibTracker(Tracker):
 
-
     def xywh_box_to_xyxy_box(self, bb):
         """Converts from center_x, center_y, width, height to ul_x, ul_y, lr_x, lr_y"""
         """(ul_x, ul_y) are (0,0) in the top left corner"""
@@ -25,34 +24,54 @@ class DlibTracker(Tracker):
         y2 = bb[3]
         return np.array([x1 + ((x2-x1) / 2), y1 + ((y2-y1) / 2), (x2-x1), (y2-y1)])
 
-    def do_tracking(self):
+    def align_detections_and_trackers(self, bbs):
         # By default, just visualize the last detected bbs. Overwrite this function for advanced tracking!
         if self.last_detected_bb_timestamp not in self.img_stream_queue.keys():
-            print ("Warning, timestamp not found in image queue!")
+            print ("Warning, timestamp {} not found in image queue!".format(self.last_detected_bb_timestamp))
             return
         last_detected_frame = self.img_stream_queue[self.last_detected_bb_timestamp]
-        # self.vis_tracking(last_detected_frame, self.last_detected_bbs, write_img=False)
-        # self.vis_tracking(last_detected_frame, self.last_detected_bb_clusters, write_img=False)
 
-        bbs = self.last_detected_bb_clusters
         for label, bb in bbs.items():
+            bbox = bb["bbox"]
+            score = bb["score"]
+            cls = bb["class"]
+            timestamp = bb["timestamp"]
 
-                bbox = bb["bbox"]
-                score = bb["score"]
-                cls = bb["class"]
-                timestamp = bb["timestamp"]
+            # TODO Check if this object is new by comparing distance to existing tracked bbs.
+            is_new_object = True
+
+            if is_new_object:
+                if cls not in self.tracker_count.keys():
+                    self.tracker_count[cls] = 0
+                # Do not use the label coming form the detection, but generate a new one.
+                label = cls + "_" + str(self.tracker_count[cls])
+                self.tracker_count[cls] += 1
                 drbbox = self.xywh_box_to_xyxy_box(bbox)
-                # if len(self.trackers) > 0:
-                #     return
                 self.tracker_info[label] = {"bb": bbox, "score": score, "cls": cls, "timestamp": timestamp}
-                if label not in self.trackers.keys():
-                    self.trackers[label] = dlib.correlation_tracker()
-                    drectangle = dlib.rectangle(int(drbbox[0]), int(drbbox[1]), int(drbbox[2]), int(drbbox[3]))
-                    self.trackers[label].start_track(last_detected_frame, drectangle)
+                self.trackers[label] = dlib.correlation_tracker()
+                drectangle = dlib.rectangle(int(drbbox[0]), int(drbbox[1]), int(drbbox[2]), int(drbbox[3]))
+                self.trackers[label].start_track(last_detected_frame, drectangle)
 
-        # self.vis_tracking(self.last_detected_bb_clusters, write_img=False)
+    def update_trackers(self, img, timestamp):
+
+        self.current_bbs = {}
+        for object_id, t in self.trackers.items():
+            t.update(img)
+            bb = t.get_position()
+            bbox = self.xyxy_box_to_xywh_box([bb.left(), bb.top(), bb.right(), bb.bottom()])
+            cls = self.tracker_info[object_id]["cls"]
+            score = self.tracker_info[object_id]["score"]
+            self.tracker_info[object_id]["bb"] = bbox
+            if object_id not in self.current_bbs.keys():
+                self.current_bbs[object_id] = {}
+                self.current_bbs[object_id]["label"] = object_id
+                self.current_bbs[object_id]["bbox"] = bbox
+                self.current_bbs[object_id]["score"] = score
+                self.current_bbs[object_id]["timestamp"] = timestamp
+                self.current_bbs[object_id]["class"] = cls
 
     def cb_camera_raw(self, msg):
+
         img = self.img_msg_2_numpy_img(msg)
         timestamp = int(msg.header.stamp.nsecs)
         self.img_stream_queue[timestamp] = img
@@ -81,5 +100,8 @@ class DlibTracker(Tracker):
         # super(DlibTracker, self).__init__()
         self.trackers = {}
         self.tracker_info = {}
+        self.tracker_count = {}
+        self.bbs_received = 0
+        self.pub_rate = 0
         Tracker.__init__(self)
 

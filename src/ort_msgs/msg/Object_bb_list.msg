@@ -1,6 +1,6 @@
 # Several bounding boxes for several objects in one frame
 string frame_id
-int32 frame_timestamp
+int64 frame_timestamp
 bool is_keyframe
 
 # BB parameters (x,y,width,height)
