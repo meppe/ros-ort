@@ -9,6 +9,7 @@ from cv_bridge import CvBridge
 from sklearn.cluster import AffinityPropagation, MeanShift
 from math import isnan
 import time
+import gc
 
 class Tracker:
 
@@ -23,8 +24,6 @@ class Tracker:
 
     def cb_camera_raw(self, msg):
         img = self.img_msg_2_numpy_img(msg)
-        # time = msg.header.stamp
-        # timestamp = int(time.secs * 1000000000 + time.nsecs)
         timestamp = msg.header.seq
         print("Received img for frame {}. Skipped {} frame(s).".format(timestamp, timestamp - self.last_img_timestamp - 1))
         self.last_img_timestamp = timestamp
@@ -35,7 +34,7 @@ class Tracker:
     # This method is meant to update self.current_bbs. This method should be overwritten for more sophisticated trackers.
     # In this simple case, we just copy the clustered BBs.
     def update_trackers(self, img, timestamp):
-        self.current_bbs = self.last_detected_bbs
+        pass
 
     def cb_bb_rec(self, msg):
 
@@ -51,31 +50,27 @@ class Tracker:
 
         self.align_detections_and_trackers(self.last_detected_bbs)
 
-        # clean up input data queue and remove all frames at and before the last detection.
-
+        # Clean up input data queue and remove all frames at and before the last detection.
         print("BB for frame {} received. Deleting frames up to here.".format(self.last_detected_bb_timestamp))
         for t in sorted(self.img_stream_queue.keys()):
             if t <= self.last_detected_bb_timestamp:
                 del self.img_stream_queue[t]
-                # print("Deleting {}".format(t))
             if t > self.last_detected_bb_timestamp + self.max_time_bb_behind:
                 print("Deleting frame {} because its more than {} in fthe future".format(t, self.max_time_bb_behind))
                 del self.img_stream_queue[t]
 
-    # This is meant to align the newly detected bbs with the existing ones from the tracking. This method should be overwritten for more sophisticated tracking.
+    # This is meant to align the newly detected bbs with the existing ones from the tracking.
+    # This method should be overwritten for more sophisticated tracking.
     def align_detections_and_trackers(self, bbs):
-        # By default, just visualize the last detected bbs. Overwrite this function for advanced tracking!
+        self.current_bbs = bbs
+        # Just check what the closes received frame was...
+        # If a frame has been received by the detector, this does not mean
+        # that it was also received by the tracker. In ROS, frames may be dropped.
         for k in sorted(self.img_stream_queue.keys()):
             if self.last_detected_bb_timestamp <= k:
                 print ("{} is the frame closest to the received frame {}".format(k, self.last_detected_bb_timestamp))
                 print("Difference is {}".format(abs(k - self.last_detected_bb_timestamp)))
                 return
-        # if self.last_detected_bb_timestamp not in self.img_stream_queue.keys():
-        #     print ("img queue")
-        #     for k in sorted(self.img_stream_queue.keys()):
-        #         print (k)
-        #     print ("Frame {} not found in image queue! -- Warning!".format(self.last_detected_bb_timestamp))
-        #     return
 
     def vis_tracking(self, im, bbs, write_img=False):
         fig, ax = plt.subplots(figsize=(12, 12))
@@ -101,9 +96,9 @@ class Tracker:
         plt.tight_layout()
         if write_img:
             plt.savefig("output/frame_" + str(self.last_detected_bb_timestamp) + ".png")
-        # img = Tracker.fig_to_img_msg(fig, self.last_detected_img_msg.header)
         img = Tracker.fig_to_img_msg(fig)
         self.bb_img_pub.publish(img)
+        plt.close()
 
     @staticmethod
     def fig_to_img_msg(fig, header=None):
@@ -191,7 +186,6 @@ class Tracker:
         return bb_clusters_by_id
 
     def __init__(self):
-
         print("Initializing the Tracker")
         self.last_detected_bbs = {}
         self.last_detected_bb_clusters = {}
@@ -206,7 +200,7 @@ class Tracker:
 
         rospy.init_node("frcnn_tracker")
         # Subscribe to bb and image
-        self.sub_bb = rospy.Subscriber("/frcnn/bb", Object_bb_list, self.cb_bb_rec, queue_size=1)
+        self.sub_bb = rospy.Subscriber("/frcnn/bb", Object_bb_list, self.cb_bb_rec, queue_size=10)
         self.sub_camera_raw = rospy.Subscriber("/frcnn_input/image_raw", Image, self.cb_camera_raw, queue_size=10)
         # This subscribes to the images that are actually processed by the detector. These are also stacked on the
         # image queue to assure that trackers are started with frames on which objectes were detected
@@ -214,3 +208,19 @@ class Tracker:
         self.bb_img_pub = rospy.Publisher('/frcnn/bb_img_tracking', Image, queue_size=1)
         self.last_img_timestamp = 0
         rospy.spin()
+
+
+# def dump_garbage():
+#     """
+#     show us what's the garbage about
+#     """
+#
+#     # force collection
+#     print "\nGARBAGE:"
+#     gc.collect()
+#
+#     print "\nGARBAGE OBJECTS:"
+#     for x in gc.garbage:
+#         s = str(x)
+#         if len(s) > 80: s = s[:80]
+#         print type(x), "\n  ", s
