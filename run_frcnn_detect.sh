@@ -18,7 +18,10 @@ if [ "$1" = "--gpu" ]; then
 	--name ros_frcnn_detect \
 	--entrypoint="/frcnn_entrypoint.sh" \
 	meppe78/ros-kinetic-frcnn \
-	bash -c "cp -rn /py-faster-rcnn /opt/ros-ort/src/frcnn/src/ && source '/opt/ros/kinetic/setup.bash' && source '/opt/ros-ort/devel/setup.bash' && python src/frcnn/scripts/run_detect.py --model pascal--zf"
+	bash -c "cp -rn /py-faster-rcnn /opt/ros-ort/src/frcnn/src/ \
+				&& source '/opt/ros/kinetic/setup.bash' \
+				&& source '/opt/ros-ort/devel/setup.bash' \
+				&& python src/frcnn/scripts/run_detect.py --model pascal--zf"
 else
 	echo "Running docker with CPU"
 	docker run \
@@ -36,7 +39,10 @@ else
 	--name ros_frcnn_detect \
 	--entrypoint="/frcnn_entrypoint.sh" \
 	meppe78/ros-kinetic-frcnn \
-	bash -c "cp -rn /py-faster-rcnn /opt/ros-ort/src/frcnn/src/ && source '/opt/ros/kinetic/setup.bash' && source '/opt/ros-ort/devel/setup.bash' && python src/frcnn/scripts/run_detect.py --cpu --model pascal--zf"
+	bash -c "cp -rn /py-faster-rcnn /opt/ros-ort/src/frcnn/src/ \
+				&& source '/opt/ros/kinetic/setup.bash' \
+				&& source '/opt/ros-ort/devel/setup.bash' \
+				&& python src/frcnn/scripts/run_detect.py --cpu --model pascal--zf"
 fi
 
 xhost -local:`docker inspect --format='{{ .Config.Hostname }}' ros_frcnn_detect`

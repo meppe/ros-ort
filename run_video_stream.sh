@@ -19,6 +19,8 @@ bash -c "source '/opt/ros/kinetic/setup.bash' && source '/opt/ros-ort/devel/setu
 			visualize:=false \
 			video_stream_provider:=/opt/ros-ort/video_data/security_cam_transporter.mp4 \
 			camera_name:=frcnn_input \
-			fps:=5"
-# bash -c 'rosbag record -j frcnn/bb_img_tracking frcnn/bb frcnn/bb_img'
+			fps:=5"	
+# bash -c "source '/opt/ros/kinetic/setup.bash' && source '/opt/ros-ort/devel/setup.bash' && \
+# 		rosbag play -l video_data/LSD_room.bag -r 0.02 -l /image_raw:=/frcnn_input/image_raw"
+	
 xhost -local:`docker inspect --format='{{ .Config.Hostname }}' ros_video_stream`
