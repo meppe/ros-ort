@@ -8,8 +8,6 @@ from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 from sklearn.cluster import AffinityPropagation, MeanShift
 from math import isnan
-import time
-import gc
 
 class Tracker:
 
@@ -46,18 +44,11 @@ class Tracker:
             print("Warning, bbs are coming {} frames after images. This is higher than the threshold "
                   "of {}".format(self.last_img_timestamp - self.last_detected_bb_timestamp, self.max_time_bb_behind))
 
-        # self.last_detected_bb_clusters = Tracker.cluster_bbs(self.last_detected_bbs)
-
         self.align_detections_and_trackers(self.last_detected_bbs)
 
         # Clean up input data queue and remove all frames at and before the last detection.
-        print("BB for frame {} received. Deleting frames up to here.".format(self.last_detected_bb_timestamp))
-        for t in sorted(self.img_stream_queue.keys()):
-            if t <= self.last_detected_bb_timestamp:
-                del self.img_stream_queue[t]
-            if t > self.last_detected_bb_timestamp + self.max_time_bb_behind:
-                print("Deleting frame {} because its more than {} in fthe future".format(t, self.max_time_bb_behind))
-                del self.img_stream_queue[t]
+        self.img_stream_queue = {}
+        self.tracker_info_history = {}
 
     # This is meant to align the newly detected bbs with the existing ones from the tracking.
     # This method should be overwritten for more sophisticated tracking.
@@ -76,9 +67,8 @@ class Tracker:
         fig, ax = plt.subplots(figsize=(12, 12))
         ax.imshow(im, aspect='equal')
         for obj_id, bb in bbs.items():
-            class_name = bb["class"]
+
             bbox = bb["bbox"]
-            score = bb["score"]
             if len(bbox) < 4:
                 print ("warning, bbox not set")
             ax.add_patch(
@@ -87,10 +77,15 @@ class Tracker:
                               bbox[3] - bbox[1], fill=False,
                               edgecolor='red', linewidth=3.5)
             )
-            ax.text(bbox[0], bbox[1] - 2,
-                    '{:s} - {:s} - {:.3f}'.format(class_name, obj_id, score),
+            bbox_text = "{:s}".format("obj_"+str(obj_id))
+
+            for cls, scr in bb["classes"].items():
+                bbox_text += " \n {} -- {:3f}".format(cls, scr)
+
+            ax.text(bbox[0], bbox[1] - 2, bbox_text,
                     bbox=dict(facecolor='blue', alpha=0.5),
                     fontsize=14, color='white')
+
 
         plt.axis('off')
         plt.tight_layout()
@@ -129,6 +124,7 @@ class Tracker:
             bb_dict[obj_label]["score"] = score
             bb_dict[obj_label]["label"] = obj_label
             bb_dict[obj_label]["class"] = class_name
+            bb_dict[obj_label]["classes"] = {class_name: score}
             bb_dict[obj_label]["timestamp"] = int(bb_msg.frame_timestamp)
         return bb_dict
 
@@ -193,6 +189,8 @@ class Tracker:
         self.current_bbs = {}
         self.cv_bridge = CvBridge()
         self.img_stream_queue = {}
+        self.tracker_info_history = {}
+        # self.bb_history = {}
 
         # Maximum amout of time (or frames) that the bb message comes after the image. This is used to clean up the
         # image queue.
@@ -208,19 +206,3 @@ class Tracker:
         self.bb_img_pub = rospy.Publisher('/frcnn/bb_img_tracking', Image, queue_size=1)
         self.last_img_timestamp = 0
         rospy.spin()
-
-
-# def dump_garbage():
-#     """
-#     show us what's the garbage about
-#     """
-#
-#     # force collection
-#     print "\nGARBAGE:"
-#     gc.collect()
-#
-#     print "\nGARBAGE OBJECTS:"
-#     for x in gc.garbage:
-#         s = str(x)
-#         if len(s) > 80: s = s[:80]
-#         print type(x), "\n  ", s

@@ -23,7 +23,7 @@ from threading import Thread
 import os
 
 # NMS_THRESH = 0.1
-CONF_THRESH = 0.6
+CONF_THRESH = 0.2
 
 class Detector:
     DETECT_RUNNING = False
