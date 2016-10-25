@@ -3,11 +3,11 @@ string frame_id
 int64 frame_timestamp
 bool is_keyframe
 
-# BB parameters (x,y,width,height)
-float32[] bb_x
-float32[] bb_y
-float32[] bb_width
-float32[] bb_height
+# BB parameters (ul_x,ul_y,lr_x, lr_y)
+float32[] bb_ul_x
+float32[] bb_ul_y
+float32[] bb_lr_x
+float32[] bb_lr_y
 # detected class
 string[] class_name
 string[] object_id

@@ -6,25 +6,25 @@ import dlib
 
 class DlibTracker(Tracker):
 
-    @staticmethod
-    def xywh_box_to_xyxy_box(bb):
-        """Converts from center_x, center_y, width, height to ul_x, ul_y, lr_x, lr_y"""
-        """(ul_x, ul_y) are (0,0) in the top left corner"""
-        x = bb[0]
-        y = bb[1]
-        w = bb[2]
-        h = bb[3]
-        return np.array([x-(w/2.), y-(h/2.), x+(w/2.), y+(h/2.)]).tolist()
-
-    @staticmethod
-    def xyxy_box_to_xywh_box(bb):
-        """Converts from center_x, center_y, width, height to ul_x, ul_y, lr_x, lr_y"""
-        """(ul_x, ul_y) are (0,0) in the top left corner"""
-        x1 = bb[0]
-        y1 = bb[1]
-        x2 = bb[2]
-        y2 = bb[3]
-        return np.array([x1 + ((x2-x1) / 2), y1 + ((y2-y1) / 2), (x2-x1), (y2-y1)]).tolist()
+    # @staticmethod
+    # def xywh_box_to_xyxy_box(bb):
+    #     """Converts from center_x, center_y, width, height to ul_x, ul_y, lr_x, lr_y"""
+    #     """(ul_x, ul_y) are (0,0) in the top left corner"""
+    #     x = bb[0]
+    #     y = bb[1]
+    #     w = bb[2]
+    #     h = bb[3]
+    #     return np.array([int(x-(w/2.)), int(y-(h/2.)), int(x+(w/2.)), int(y+(h/2.))]).tolist()
+    #
+    # @staticmethod
+    # def xyxy_box_to_xywh_box(bb):
+    #     """Converts from center_x, center_y, width, height to ul_x, ul_y, lr_x, lr_y"""
+    #     """(ul_x, ul_y) are (0,0) in the top left corner"""
+    #     x1 = bb[0]
+    #     y1 = bb[1]
+    #     x2 = bb[2]
+    #     y2 = bb[3]
+    #     return np.array([int(x1 + ((x2-x1) / 2)), int(y1 + ((y2-y1) / 2)), int((x2-x1)), int((y2-y1))]).tolist()
 
     @staticmethod
     def iou(bb_test, bb_gt):
@@ -42,6 +42,7 @@ class DlibTracker(Tracker):
                   + (bb_gt[2] - bb_gt[0]) * (bb_gt[3] - bb_gt[1]) - wh)
         return (o)
 
+    # @profile
     def align_detections_and_trackers(self, bbs):
 
         bb_timestamp = self.last_detected_bb_timestamp
@@ -66,7 +67,6 @@ class DlibTracker(Tracker):
 
         for label, bb in bbs.items():
             bbox = bb["bbox"]
-            bbox_xyxy = DlibTracker.xywh_box_to_xyxy_box(bbox)
             score = bb["score"]
             cls = bb["class"]
             timestamp = bb["timestamp"]
@@ -76,7 +76,7 @@ class DlibTracker(Tracker):
             # If IOU is below threshold, match it.
             ious = {}
             for obj_id, t_info in tracker_info.items():
-                ious[obj_id] = DlibTracker.iou(t_info["bbox_xyxy"], bbox_xyxy)
+                ious[obj_id] = DlibTracker.iou(t_info["bbox"], bbox)
             # Get obj_id that has the closest bb:
             if len(ious.keys()) > 0:
                 obj_id = max(ious, key=ious.get)
@@ -94,20 +94,29 @@ class DlibTracker(Tracker):
                     old_weighted_coords = np.asarray(tracker_info[obj_id]["bbox"]) * old_score
                     new_weighted_coords = np.asarray(bbox) * score
                     tracker_info[obj_id]["bbox"] = ((old_weighted_coords + new_weighted_coords) / totalscore).tolist()
+                    tracker_info[obj_id]["bbox"] = [int(coord) for coord in tracker_info[obj_id]["bbox"]]
                     # tracker_info[obj_id]["bbox"] = bbox
-                    tracker_info[obj_id]["bbox_xyxy"] = DlibTracker.xywh_box_to_xyxy_box(tracker_info[obj_id]["bbox"])
                     # Update class score
                     updated_trackers.append(obj_id)
             if is_new_object:
                 obj_id = self.tracker_count
                 self.tracker_count += 1
-                bbox_xyxy = DlibTracker.xywh_box_to_xyxy_box(bbox)
                 self.tracker_info[obj_id] = {"bbox": bbox, "score": score, "cls": cls,
-                                            "timestamp": timestamp, "classes": {cls: score},
-                                            "bbox_xyxy": bbox_xyxy}
+                                            "timestamp": timestamp, "classes": {cls: score}}
                 updated_trackers.append(obj_id)
 
-        # Update trackers. Update new bbox, class and score.
+        #Restart those trackers that have been realigned with new detections.
+        for object_id, t in self.tracker_info.items():
+            if object_id not in updated_trackers:
+                continue
+            self.trackers[object_id] = dlib.correlation_tracker()
+            drbbox = tracker_info[object_id]["bbox"]
+            drectangle = dlib.rectangle(int(drbbox[0]), int(drbbox[1]), int(drbbox[2]), int(drbbox[3]))
+            img = self.img_stream_queue[closest_timestamp]
+            tracker = self.trackers[object_id]
+            tracker.start_track(img, drectangle)
+
+        # Update trackers that have been realigned with new detections. Update new bbox, class and score.
         for img_timestamp in sorted(self.img_stream_queue.keys()):
             img = self.img_stream_queue[img_timestamp]
             if img_timestamp < bb_timestamp:
@@ -117,15 +126,9 @@ class DlibTracker(Tracker):
 
                 if object_id not in updated_trackers:
                     continue
-                self.trackers[object_id] = dlib.correlation_tracker()
-                drbbox = tracker_info[object_id]["bbox_xyxy"]
-                drectangle = dlib.rectangle(int(drbbox[0]), int(drbbox[1]), int(drbbox[2]), int(drbbox[3]))
-                self.trackers[object_id].start_track(img, drectangle)
                 self.trackers[object_id].update(img)
-                bb = self.trackers[object_id].get_position()
-                bbox = DlibTracker.xyxy_box_to_xywh_box([bb.left(), bb.top(), bb.right(), bb.bottom()])
-                self.tracker_info[object_id]["bb"] = bbox
-                self.tracker_info[object_id]["bb_xyxy"] = DlibTracker.xywh_box_to_xyxy_box(bbox)
+                bbox = self.trackers[object_id].get_position()
+                self.tracker_info[object_id]["bbox"] = [int(bbox.left()), int(bbox.top()), int(bbox.right()), int(bbox.bottom())]
                 # Apply score decay, so that new matched detections have a higher impact on the position of the bbox.
                 for cls in self.tracker_info[object_id]["classes"]:
                     self.tracker_info[object_id]["classes"][cls] /= self.total_score_decay
@@ -134,6 +137,7 @@ class DlibTracker(Tracker):
         self.tracker_alignment_running = False
 
 
+    # @profile
     def update_trackers(self, img, timestamp):
         while self.tracker_alignment_running == True:
             time.sleep(0.001)
@@ -152,12 +156,12 @@ class DlibTracker(Tracker):
         for object_id, t in self.trackers.items():
             self.trackers[object_id].update(img)
             bb = t.get_position()
-            bbox = self.xyxy_box_to_xywh_box([bb.left(), bb.top(), bb.right(), bb.bottom()])
+            bbox = [bb.left(), bb.top(), bb.right(), bb.bottom()]
+            bbox = [int(coord) for coord in bbox]
             classes = self.tracker_info[object_id]["classes"]
             cls = max(classes, key=classes.get)
             score = classes[cls]
             self.tracker_info[object_id]["bb"] = bbox
-            self.tracker_info[object_id]["bb_xyxy"] = bb
             # Apply totalscore decay, so that new matched detections have a higher impact on the position of the bbox in align_detections_and_trackers function.
             for cls in self.tracker_info[object_id]["classes"]:
                 self.tracker_info[object_id]["classes"][cls] /= self.total_score_decay
@@ -179,7 +183,8 @@ class DlibTracker(Tracker):
         self.bbs_received = 0
         self.total_score_threshold = 0.5
         self.total_score_decay = 1.1
-        self.iou_threshold = 0.5
+        # The higher the numbers the more bounding boxes there are.
+        self.iou_threshold = 0.4
         self.tracker_alignment_running = False
         self.tracker_update_running = False
         Tracker.__init__(self)

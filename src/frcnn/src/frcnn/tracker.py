@@ -8,6 +8,7 @@ from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 from sklearn.cluster import AffinityPropagation, MeanShift
 from math import isnan
+import cv2
 
 class Tracker:
 
@@ -20,6 +21,7 @@ class Tracker:
             img = np.swapaxes(img, 1, 0)
         return img
 
+    # @profile
     def cb_camera_raw(self, msg):
         img = self.img_msg_2_numpy_img(msg)
         timestamp = msg.header.seq
@@ -27,13 +29,14 @@ class Tracker:
         self.last_img_timestamp = timestamp
         self.img_stream_queue[timestamp] = img
         self.update_trackers(img, timestamp)
-        self.vis_tracking(img, self.current_bbs, write_img=False)
+        self.vis_tracking(img, self.current_bbs)
 
     # This method is meant to update self.current_bbs. This method should be overwritten for more sophisticated trackers.
     # In this simple case, we just copy the clustered BBs.
     def update_trackers(self, img, timestamp):
         pass
 
+    # @profile
     def cb_bb_rec(self, msg):
 
         self.last_detected_bbs = Tracker.bb_msg_to_bb_dict(msg)
@@ -63,50 +66,52 @@ class Tracker:
                 print("Difference is {}".format(abs(k - self.last_detected_bb_timestamp)))
                 return
 
-    def vis_tracking(self, im, bbs, write_img=False):
-        fig, ax = plt.subplots(figsize=(12, 12))
-        ax.imshow(im, aspect='equal')
+    # @profile
+    def vis_tracking(self, im, bbs):
+        # draw grid
+        # factor = 100
+        # for y in range((im.shape[0] / factor) + 1):
+        #     y = y * factor
+        #     im = cv2.line(im, (0,y), (im.shape[1]-1, y), (255,0,0), 2)
+        #
+        # for x in range((im.shape[1] / factor) + 1):
+        #     x = x * factor
+        #     im = cv2.line(im, (x,0), (x, im.shape[0]-1 ), (255,0,0), 2)
+
         for obj_id, bb in bbs.items():
-
             bbox = bb["bbox"]
-            if len(bbox) < 4:
-                print ("warning, bbox not set")
-            ax.add_patch(
-                plt.Rectangle((bbox[0], bbox[1]),
-                              bbox[2] - bbox[0],
-                              bbox[3] - bbox[1], fill=False,
-                              edgecolor='red', linewidth=3.5)
-            )
-            bbox_text = "{:s}".format("obj_"+str(obj_id))
+            ul = (bbox[0], bbox[1])
+            lr = (bbox[2], bbox[3])
+            rect_color = (0, 0, 255)
+            font_color = (255, 255, 255)
+            im = cv2.rectangle(im, ul, lr, rect_color, 2)
+            bbox_text = []
+            bbox_text.append("{:s}".format("obj_" + str(obj_id)))
+            for cls in sorted(bb["classes"], key=bb["classes"].get):
+                scr = bb["classes"][cls]
+                bbox_text.append("{} -- {:.2f}".format(cls, scr))
+            font_height = 12
+            for i, txt in enumerate(bbox_text):
+                txt_ul = (ul[0], ul[1] - ((len(bbox_text) - i) * font_height))
+                im = cv2.putText(im, txt, txt_ul, cv2.FONT_HERSHEY_SIMPLEX, 0.4, font_color, 1, cv2.LINE_AA)
 
-            for cls, scr in bb["classes"].items():
-                bbox_text += " \n {} -- {:3f}".format(cls, scr)
+        img_msg = self.cv_bridge.cv2_to_imgmsg(im, encoding="bgr8")
 
-            ax.text(bbox[0], bbox[1] - 2, bbox_text,
-                    bbox=dict(facecolor='blue', alpha=0.5),
-                    fontsize=14, color='white')
-
-
-        plt.axis('off')
-        plt.tight_layout()
-        if write_img:
-            plt.savefig("output/frame_" + str(self.last_detected_bb_timestamp) + ".png")
-        img = Tracker.fig_to_img_msg(fig)
-        self.bb_img_pub.publish(img)
-        plt.close()
+        self.bb_img_pub.publish(img_msg)
 
     @staticmethod
-    def fig_to_img_msg(fig, header=None):
+    def fig_to_img_msg(fig, cv_bridge=None, header=None):
         # Transform figure into numpy array
         # If we haven't already shown or saved the plot, then we need to
         # draw the figure first...
+        if not cv_bridge:
+            cv_bridge = CvBridge()
         fig.canvas.draw()
         # Now we can save it to a numpy array.
         data = np.fromstring(fig.canvas.tostring_rgb(), dtype=np.uint8, sep='')
         data = data.reshape(fig.canvas.get_width_height()[::-1] + (3,))
         cv_image = data
-        bridge = CvBridge()
-        img = bridge.cv2_to_imgmsg(cv_image, encoding="bgr8")
+        img = cv_bridge.cv2_to_imgmsg(cv_image, encoding="bgr8")
         if header is not None:
             img.header = header
         return img
@@ -117,7 +122,7 @@ class Tracker:
         for i, obj_label in enumerate(bb_msg.object_id):
             if obj_label not in bb_dict.keys():
                 bb_dict[obj_label] = {}
-            bbox = [bb_msg.bb_x[i], bb_msg.bb_y[i], bb_msg.bb_width[i], bb_msg.bb_height[i]]
+            bbox = [int(bb_msg.bb_ul_x[i]), int(bb_msg.bb_ul_y[i]), int(bb_msg.bb_lr_x[i]), int(bb_msg.bb_lr_y[i])]
             score = bb_msg.score[i]
             class_name = bb_msg.class_name[i]
             bb_dict[obj_label]["bbox"] = bbox

@@ -100,10 +100,10 @@ class Detector:
         # print("Publishing bb with timestamp {}".format(timestamp))
         frame_id = self.current_frame_header.frame_id
 
-        bb_xs = []
-        bb_ys = []
-        bb_widths = []
-        bb_heights = []
+        bb_ul_xs = []
+        bb_ul_ys = []
+        bb_lr_xs = []
+        bb_lr_ys = []
         bb_scores = []
         obj_labels = []
         class_names = []
@@ -118,19 +118,19 @@ class Detector:
                 # print max_score
                 if score < CONF_THRESH:
                     continue
-                b_x = b[0]
-                b_y = b[1]
-                b_width = b[2]
-                b_height = b[3]
-                bb_xs.append(b_x)
-                bb_ys.append(b_y)
-                bb_widths.append(b_width)
-                bb_heights.append(b_height)
+                b_ul_x = b[0]
+                b_ul_y = b[1]
+                b_lr_x = b[2]
+                b_lr_y = b[3]
+                bb_ul_xs.append(b_ul_x)
+                bb_ul_ys.append(b_ul_y)
+                bb_lr_xs.append(b_lr_x)
+                bb_lr_ys.append(b_lr_y)
                 bb_scores.append(score)
                 obj_labels.append(cls+"_"+str(i))
                 class_names.append(cls)
 
-        bb_msg = Object_bb_list(frame_id, timestamp, is_keyframe, bb_xs, bb_ys, bb_widths, bb_heights, class_names,
+        bb_msg = Object_bb_list(frame_id, timestamp, is_keyframe, bb_ul_xs, bb_ul_ys, bb_lr_xs, bb_lr_ys, class_names,
                                 obj_labels, bb_scores)
         self.bb_pub.publish(bb_msg)
 
