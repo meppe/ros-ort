@@ -153,26 +153,47 @@ class DlibTracker(Tracker):
             time.sleep(0.001)
         self.tracker_update_running = True
 
-        # First, delete all trackers that have a low total score.
+        # First, mark all trackers that have a low total score for deletion.
+        remaining_tracker_scores = {}
+        trackers_to_delete = set()
+        num_trackers = len(self.tracker_info.keys())
         for object_id in self.tracker_info.keys():
             totalscore = sum(self.tracker_info[object_id]["classes"].values())
             if totalscore < self.total_score_threshold:
                 print("Tracker for object {} has a low score of {}. It will be removed.".format(
                     str(object_id), str(totalscore)))
-                if object_id not in self.trackers.keys():
-                    print("Warning, trying to delete non-existing tracker for object {}. These are the objects for "
-                          "which trackers exist:".format(object_id))
-                    print(self.trackers.keys())
-                    # time.sleep(0.01)
-                else:
-                    del self.trackers[object_id]
-                if object_id not in self.tracker_info.keys():
-                    print("Warning, trying to delete non-existing tracker_info for object {}. These are the objects "
-                          "for which tracke_infos exist:".format(object_id))
-                    print(self.tracker_info.keys())
-                    # time.sleep(0.01)
-                else:
-                    del self.tracker_info[object_id]
+                trackers_to_delete.add(object_id)
+            else:
+                remaining_tracker_scores[object_id] = totalscore
+
+        # If there are too many trackers, mark those with the lowest score for deletion.
+        while num_trackers - len(trackers_to_delete) > self.max_trackers:
+            t_to_del = min(remaining_tracker_scores, key=remaining_tracker_scores.get)
+            print("Too many trackers running, only {} allowed. Deleting tracker for object {}, "
+                  "because it has the lowest score.".format(
+                    str(self.max_trackers), str(t_to_del)))
+            trackers_to_delete.add(t_to_del)
+            del remaining_tracker_scores[t_to_del]
+
+        for object_id in trackers_to_delete:
+            if object_id not in self.trackers.keys():
+                print("Warning, trying to delete non-existing tracker for object {}. These are the objects for "
+                      "which trackers exist:".format(object_id))
+                print(self.trackers.keys())
+                # time.sleep(0.01)
+            else:
+                del self.trackers[object_id]
+            if object_id not in self.tracker_info.keys():
+                print("Warning, trying to delete non-existing tracker_info for object {}. These are the objects "
+                      "for which tracke_infos exist:".format(object_id))
+                print(self.tracker_info.keys())
+                # time.sleep(0.01)
+            else:
+                del self.tracker_info[object_id]
+
+
+
+
 
         # Now update current bbs
         self.current_bbs = {}
@@ -210,6 +231,7 @@ class DlibTracker(Tracker):
         self.total_score_decay = 1.1
         # The higher the numbers the more bounding boxes there are.
         self.iou_threshold = 0.3
+        self.max_trackers = 6
         self.tracker_alignment_running = False
         self.tracker_update_running = False
         Tracker.__init__(self)
