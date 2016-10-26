@@ -44,23 +44,32 @@ class DlibTracker(Tracker):
 
     # @profile
     def align_detections_and_trackers(self, bbs):
-
         bb_timestamp = self.last_detected_bb_timestamp
         closest_timestamp = None
+        img_queue_keys = self.img_stream_queue.keys()
         for k in sorted(self.img_stream_queue.keys()):
             if self.last_detected_bb_timestamp <= k:
                 closest_timestamp = k
-                print ("{} is the frame closest to the received frame {}".format(k, self.last_detected_bb_timestamp))
-                print("Difference is {}".format(abs(k - self.last_detected_bb_timestamp)))
+                break
+        closest_timestamp = min(self.img_stream_queue.keys(), key=lambda x: abs(x-bb_timestamp))
+        if closest_timestamp == None:
+            print("Warning, no frame for BB with timestamp {} has been found.".format(bb_timestamp))
+            print(img_queue_keys)
+            return
+        if closest_timestamp != bb_timestamp:
+            print("Frame {} has not been received. Processing the closest frame {} instead.".format(
+                bb_timestamp, closest_timestamp))
+        # Wait until all received frames have been tracked.
+        while closest_timestamp not in self.tracker_info_history.keys():
+            print("Waiting for tracking frame {} to finish.".format(str(closest_timestamp)))
+            time.sleep(0.01)
         if closest_timestamp not in self.img_stream_queue.keys():
-            print ("Warning, timestamp {} not found in image queue!".format(closest_timestamp))
-            return
+            print("Warning, timestamp {} not found in image queue!".format(closest_timestamp))
+            exit(1)
         if closest_timestamp not in self.tracker_info_history.keys():
-            print ("Warning, timestamp {} not found in tracker history!".format(closest_timestamp))
-            return
+            print("Warning, timestamp {} not found in tracker history!".format(closest_timestamp))
+            exit(1)
 
-        while self.tracker_update_running == True:
-            time.sleep(0.001)
         self.tracker_alignment_running = True
         tracker_info = self.tracker_info_history[closest_timestamp]
         updated_trackers = []
@@ -69,7 +78,7 @@ class DlibTracker(Tracker):
             bbox = bb["bbox"]
             score = bb["score"]
             cls = bb["class"]
-            timestamp = bb["timestamp"]
+            # timestamp = bb["timestamp"]
 
             is_new_object = True
             # Iterate through all tracker states at the timestamp of the BB and compute iou.
@@ -87,7 +96,7 @@ class DlibTracker(Tracker):
                         tracker_info[obj_id]["classes"][cls] = score
                     else:
                         tracker_info[obj_id]["classes"][cls] += score
-                    tracker_info[obj_id]["timestamp"] = timestamp
+                    tracker_info[obj_id]["timestamp"] = bb_timestamp
                     totalscore = sum(tracker_info[obj_id]["classes"].values())
                     old_score = totalscore - score
                     # Update bb coordinates
@@ -95,84 +104,95 @@ class DlibTracker(Tracker):
                     new_weighted_coords = np.asarray(bbox) * score
                     tracker_info[obj_id]["bbox"] = ((old_weighted_coords + new_weighted_coords) / totalscore).tolist()
                     tracker_info[obj_id]["bbox"] = [int(coord) for coord in tracker_info[obj_id]["bbox"]]
-                    # tracker_info[obj_id]["bbox"] = bbox
-                    # Update class score
                     updated_trackers.append(obj_id)
             if is_new_object:
                 obj_id = self.tracker_count
                 self.tracker_count += 1
                 self.tracker_info[obj_id] = {"bbox": bbox, "score": score, "cls": cls,
-                                            "timestamp": timestamp, "classes": {cls: score}}
+                                            "timestamp": bb_timestamp, "classes": {cls: score}}
                 updated_trackers.append(obj_id)
 
-        #Restart those trackers that have been realigned with new detections.
+        #Restart those trackers that have been realigned with new detections and track the frames between BB detectio and last frame.
         for object_id, t in self.tracker_info.items():
             if object_id not in updated_trackers:
                 continue
+            # Restart tracker
             self.trackers[object_id] = dlib.correlation_tracker()
             drbbox = tracker_info[object_id]["bbox"]
             drectangle = dlib.rectangle(int(drbbox[0]), int(drbbox[1]), int(drbbox[2]), int(drbbox[3]))
             img = self.img_stream_queue[closest_timestamp]
             tracker = self.trackers[object_id]
             tracker.start_track(img, drectangle)
-
-        # Update trackers that have been realigned with new detections. Update new bbox, class and score.
-        for img_timestamp in sorted(self.img_stream_queue.keys()):
-            img = self.img_stream_queue[img_timestamp]
-            if img_timestamp < bb_timestamp:
-                continue
-
-            for object_id, t in self.tracker_info.items():
-
-                if object_id not in updated_trackers:
+            # Re-track the frames between the bb-detection frame and the last received frame.
+            last_img_timestamp = bb_timestamp
+            for img_timestamp in sorted(self.img_stream_queue.keys()):
+                if img_timestamp <= bb_timestamp:
                     continue
+                img = self.img_stream_queue[img_timestamp]
                 self.trackers[object_id].update(img)
-                bbox = self.trackers[object_id].get_position()
-                self.tracker_info[object_id]["bbox"] = [int(bbox.left()), int(bbox.top()), int(bbox.right()), int(bbox.bottom())]
-                # Apply score decay, so that new matched detections have a higher impact on the position of the bbox.
-                for cls in self.tracker_info[object_id]["classes"]:
-                    self.tracker_info[object_id]["classes"][cls] /= self.total_score_decay
-            self.tracker_info_history[img_timestamp] = self.tracker_info
+                last_img_timestamp = img_timestamp
+            # Update tracker info
+            bbox = self.trackers[object_id].get_position()
+            self.tracker_info[object_id]["bbox"] = [int(bbox.left()), int(bbox.top()), int(bbox.right()),
+                                                    int(bbox.bottom())]
+            self.tracker_info[object_id]["timestamp"] = last_img_timestamp
+            # Apply score decay, so that new matched detections have a higher impact on the position of the bbox.
+            for cls in self.tracker_info[object_id]["classes"]:
+                self.tracker_info[object_id]["classes"][cls] /= self.total_score_decay
+            self.tracker_info_history[last_img_timestamp] = self.tracker_info
 
         self.tracker_alignment_running = False
 
 
     # @profile
     def update_trackers(self, img, timestamp):
-        while self.tracker_alignment_running == True:
-            time.sleep(0.001)
         self.tracker_update_running = True
 
         # First, delete all trackers that have a low total score.
-        for object_id, t_info in self.tracker_info.items():
+        for object_id in self.tracker_info.keys():
             totalscore = sum(self.tracker_info[object_id]["classes"].values())
             if totalscore < self.total_score_threshold:
-                print("Tracker for object {} has a low score of {}. It will be removed.".format(str(object_id), str(totalscore)))
-                del self.trackers[object_id]
-                del self.tracker_info[object_id]
+                print("Tracker for object {} has a low score of {}. It will be removed.".format(
+                    str(object_id), str(totalscore)))
+                if object_id not in self.trackers.keys():
+                    print("Warning, trying to delete non-existing tracker for object {}. These are the objects for "
+                          "which trackers exist:".format(object_id))
+                    print(self.trackers.keys())
+                    # time.sleep(0.01)
+                else:
+                    del self.trackers[object_id]
+                if object_id not in self.tracker_info.keys():
+                    print("Warning, trying to delete non-existing tracker_info for object {}. These are the objects "
+                          "for which tracke_infos exist:".format(object_id))
+                    print(self.tracker_info.keys())
+                    # time.sleep(0.01)
+                else:
+                    del self.tracker_info[object_id]
 
         # Now update current bbs
         self.current_bbs = {}
-        for object_id, t in self.trackers.items():
+        for object_id in self.trackers.keys():
             self.trackers[object_id].update(img)
-            bb = t.get_position()
+            bb = self.trackers[object_id].get_position()
             bbox = [bb.left(), bb.top(), bb.right(), bb.bottom()]
             bbox = [int(coord) for coord in bbox]
             classes = self.tracker_info[object_id]["classes"]
             cls = max(classes, key=classes.get)
             score = classes[cls]
             self.tracker_info[object_id]["bb"] = bbox
-            # Apply totalscore decay, so that new matched detections have a higher impact on the position of the bbox in align_detections_and_trackers function.
+            # Apply totalscore decay, so that new matched detections have a higher impact on the position of the bbox
+            # in align_detections_and_trackers function.
             for cls in self.tracker_info[object_id]["classes"]:
                 self.tracker_info[object_id]["classes"][cls] /= self.total_score_decay
-            if object_id not in self.current_bbs.keys():
-                self.current_bbs[object_id] = {}
-                self.current_bbs[object_id]["label"] = object_id
-                self.current_bbs[object_id]["bbox"] = bbox
-                self.current_bbs[object_id]["score"] = score
-                self.current_bbs[object_id]["timestamp"] = timestamp
-                self.current_bbs[object_id]["class"] = cls
-                self.current_bbs[object_id]["classes"] = classes
+            # Update current_bbs. This is the dict that is being visualized through parent class Tracker.
+            # if object_id not in self.current_bbs.keys():
+            self.current_bbs[object_id] = {}
+            self.current_bbs[object_id]["label"] = object_id
+            self.current_bbs[object_id]["bbox"] = bbox
+            self.current_bbs[object_id]["score"] = score
+            self.current_bbs[object_id]["timestamp"] = timestamp
+            self.current_bbs[object_id]["class"] = cls
+            self.current_bbs[object_id]["classes"] = classes
         self.tracker_info_history[timestamp] = self.tracker_info
         self.tracker_update_running = False
 
@@ -184,7 +204,7 @@ class DlibTracker(Tracker):
         self.total_score_threshold = 0.5
         self.total_score_decay = 1.1
         # The higher the numbers the more bounding boxes there are.
-        self.iou_threshold = 0.4
+        self.iou_threshold = 0.3
         self.tracker_alignment_running = False
         self.tracker_update_running = False
         Tracker.__init__(self)

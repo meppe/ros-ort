@@ -17,9 +17,21 @@ meppe78/ros-kinetic-video-stream \
 bash -c "source '/opt/ros/kinetic/setup.bash' && source '/opt/ros-ort/devel/setup.bash' && \
 			roslaunch src/video_stream_opencv/launch/camera.launch \
 			visualize:=false \
-			video_stream_provider:=/opt/ros-ort/video_data/security_cam_transporter.mp4 \
+			video_stream_provider:=/opt/ros-ort/video_data/Gravity_Long_Take_Shorter_640.mp4 \
 			camera_name:=frcnn_input \
-			fps:=1"	
+			fps:=2"	
+# bash -c "source '/opt/ros/kinetic/setup.bash' && source '/opt/ros-ort/devel/setup.bash' && \
+# 			roslaunch src/video_stream_opencv/launch/camera.launch \
+# 			visualize:=false \
+# 			video_stream_provider:=/opt/ros-ort/video_data/Goodfellas_Long_Take_Restaurant_480.mp4 \
+# 			camera_name:=frcnn_input \
+# 			fps:=1"				
+# bash -c "source '/opt/ros/kinetic/setup.bash' && source '/opt/ros-ort/devel/setup.bash' && \
+# 			roslaunch src/video_stream_opencv/launch/camera.launch \
+# 			visualize:=false \
+# 			video_stream_provider:=/opt/ros-ort/video_data/security_cam_transporter.mp4 \
+# 			camera_name:=frcnn_input \
+# 			fps:=2"	
 # bash -c "source '/opt/ros/kinetic/setup.bash' && source '/opt/ros-ort/devel/setup.bash' && \
 # 			roslaunch src/video_stream_opencv/launch/camera.launch \
 # 			visualize:=false \

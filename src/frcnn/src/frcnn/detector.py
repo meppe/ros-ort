@@ -85,8 +85,8 @@ class Detector:
             _, _ = im_detect(self.net, im)
 
         # Create bounding box publisher
-        self.bb_pub = rospy.Publisher('frcnn/bb', Object_bb_list, queue_size=1)
-        self.bb_img_pub = rospy.Publisher('frcnn/bb_img', Image, queue_size=1)
+        self.bb_pub = rospy.Publisher('frcnn/bb', Object_bb_list, queue_size=10)
+        # self.bb_img_pub = rospy.Publisher('frcnn/bb_img', Image, queue_size=1)
 
         self.detection_start = time.time()
         self.sub_frames = rospy.Subscriber("/frcnn_input/image_raw", Image, self.cb_frame_rec, queue_size=10)
@@ -161,7 +161,7 @@ class Detector:
             if self.net is not None:
                 self.frame_detect(self.net, img)
                 # re-publish image that is worked on
-                self.bb_img_pub.publish(msg)
+                # self.bb_img_pub.publish(msg)
                 # publish actual detections
                 self.pub_detections()
 

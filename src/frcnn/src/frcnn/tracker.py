@@ -9,6 +9,7 @@ from cv_bridge import CvBridge
 from sklearn.cluster import AffinityPropagation, MeanShift
 from math import isnan
 import cv2
+import time
 
 class Tracker:
 
@@ -25,14 +26,16 @@ class Tracker:
     def cb_camera_raw(self, msg):
         img = self.img_msg_2_numpy_img(msg)
         timestamp = msg.header.seq
-        print("Received img for frame {}. Skipped {} frame(s).".format(timestamp, timestamp - self.last_img_timestamp - 1))
+        skip = timestamp - self.last_img_timestamp - 1
+        if skip > 0:
+            print("Received img for frame {}. Skipped {} frame(s). Frames coming too fast or system too slow.".format(
+                timestamp, skip))
         self.last_img_timestamp = timestamp
         self.img_stream_queue[timestamp] = img
         self.update_trackers(img, timestamp)
         self.vis_tracking(img, self.current_bbs)
 
     # This method is meant to update self.current_bbs. This method should be overwritten for more sophisticated trackers.
-    # In this simple case, we just copy the clustered BBs.
     def update_trackers(self, img, timestamp):
         pass
 
@@ -43,15 +46,25 @@ class Tracker:
 
         self.last_detected_bb_timestamp = int(msg.frame_timestamp)
 
-        if self.last_detected_bb_timestamp + self.max_time_bb_behind < self.last_img_timestamp:
-            print("Warning, bbs are coming {} frames after images. This is higher than the threshold "
-                  "of {}".format(self.last_img_timestamp - self.last_detected_bb_timestamp, self.max_time_bb_behind))
+        print("Received BB object detections for frame {}. Last image frame is {}.".format(
+            self.last_detected_bb_timestamp, self.last_img_timestamp))
 
         self.align_detections_and_trackers(self.last_detected_bbs)
 
         # Clean up input data queue and remove all frames at and before the last detection.
-        self.img_stream_queue = {}
-        self.tracker_info_history = {}
+        img_queue_to_keep = {}
+        tracker_history_to_keep = {}
+        for timestamp in sorted(self.img_stream_queue.keys()):
+            if timestamp >= self.last_detected_bb_timestamp and timestamp <= self.last_img_timestamp:
+                img_queue_to_keep[timestamp] = self.img_stream_queue[timestamp]
+                # Wait for tracking to be finished for that timestamp.
+                while timestamp not in self.tracker_info_history.keys():
+                    print("Waiting for tracking frame {} to finish.".format(str(timestamp)))
+                    time.sleep(0.01)
+                tracker_history_to_keep[timestamp] = self.tracker_info_history[timestamp]
+
+        self.img_stream_queue = img_queue_to_keep
+        self.tracker_info_history = tracker_history_to_keep
 
     # This is meant to align the newly detected bbs with the existing ones from the tracking.
     # This method should be overwritten for more sophisticated tracking.
@@ -62,8 +75,8 @@ class Tracker:
         # that it was also received by the tracker. In ROS, frames may be dropped.
         for k in sorted(self.img_stream_queue.keys()):
             if self.last_detected_bb_timestamp <= k:
-                print ("{} is the frame closest to the received frame {}".format(k, self.last_detected_bb_timestamp))
-                print("Difference is {}".format(abs(k - self.last_detected_bb_timestamp)))
+                print ("Frame {} is the frame closest to the received BB frame {}. Skipping {} frames.".format(
+                    k, self.last_detected_bb_timestamp, abs(k - self.last_detected_bb_timestamp)))
                 return
 
     # @profile
@@ -91,9 +104,12 @@ class Tracker:
                 scr = bb["classes"][cls]
                 bbox_text.append("{} -- {:.2f}".format(cls, scr))
             font_height = 12
+            txt_ul = [ul[0], ul[1] - (len(bbox_text) * font_height)]
+            txt_ul[0] = max(txt_ul[0], 0)
+            txt_ul[1] = max(txt_ul[1], font_height)
             for i, txt in enumerate(bbox_text):
-                txt_ul = (ul[0], ul[1] - ((len(bbox_text) - i) * font_height))
-                im = cv2.putText(im, txt, txt_ul, cv2.FONT_HERSHEY_SIMPLEX, 0.4, font_color, 1, cv2.LINE_AA)
+                line_ul = (txt_ul[0], txt_ul[1] + font_height * i)
+                im = cv2.putText(im, txt, line_ul, cv2.FONT_HERSHEY_SIMPLEX, 0.4, font_color, 1, cv2.LINE_AA)
 
         img_msg = self.cv_bridge.cv2_to_imgmsg(im, encoding="bgr8")
 
@@ -208,6 +224,6 @@ class Tracker:
         # This subscribes to the images that are actually processed by the detector. These are also stacked on the
         # image queue to assure that trackers are started with frames on which objectes were detected
         # self.sub_camera_raw_detection = rospy.Subscriber("/frcnn/bb_img", Image, self.cb_camera_raw, queue_size=10)
-        self.bb_img_pub = rospy.Publisher('/frcnn/bb_img_tracking', Image, queue_size=1)
+        self.bb_img_pub = rospy.Publisher('/frcnn/bb_img_tracking', Image, queue_size=10)
         self.last_img_timestamp = 0
         rospy.spin()
