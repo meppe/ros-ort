@@ -44,6 +44,9 @@ class DlibTracker(Tracker):
 
     # @profile
     def align_detections_and_trackers(self, bbs):
+        while (self.tracker_update_running):
+            time.sleep(0.001)
+
         bb_timestamp = self.last_detected_bb_timestamp
         closest_timestamp = None
         img_queue_keys = self.img_stream_queue.keys()
@@ -146,6 +149,8 @@ class DlibTracker(Tracker):
 
     # @profile
     def update_trackers(self, img, timestamp):
+        while (self.tracker_alignment_running):
+            time.sleep(0.001)
         self.tracker_update_running = True
 
         # First, delete all trackers that have a low total score.
