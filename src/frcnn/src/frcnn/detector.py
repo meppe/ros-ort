@@ -47,8 +47,8 @@ class Detector:
         # The first frame's header secs timestamp.
         # self.start_secs = 0
 
-        self.CONF_THRESH = 0.2
-        self.NMS_THRESH = 0.1
+        self.CONF_THRESH = 0.8
+        # self.NMS_THRESH = 0.1
 
         rospy.init_node("frcnn_detector")
         print("node initialized")
