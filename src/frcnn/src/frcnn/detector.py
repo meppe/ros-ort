@@ -79,8 +79,6 @@ class Detector:
             cfg.GPU_ID = args.gpu_id
             print("Set caffe to GPU mode, running on GPU {}".format(cfg.GPU_ID))
 
-        raw_input()
-
         self.net = caffe.Net(prototxt, caffemodel, caffe.TEST)
 
         print '\n\nLoaded network {:s}'.format(caffemodel)
@@ -142,12 +140,12 @@ class Detector:
     def frame_detect(self, net, im):
         if self.args.cpu_mode:
             caffe.set_mode_cpu()
-            print("Set caffe to CPU mode")
+            # print("Set caffe to CPU mode")
         else:
             caffe.set_mode_gpu()
             caffe.set_device(self.args.gpu_id)
             cfg.GPU_ID = self.args.gpu_id
-            print("Set caffe to GPU mode, running on GPU {}".format(cfg.GPU_ID))
+            # print("Set caffe to GPU mode, running on GPU {}".format(cfg.GPU_ID))
         """Detect object classes in an image using pre-computed object proposals."""
         # Detect all object classes and regress object bounds
         timer = Timer()
