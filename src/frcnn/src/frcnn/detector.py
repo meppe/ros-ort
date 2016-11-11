@@ -71,10 +71,12 @@ class Detector:
                            "respective network you chose.").format(caffemodel))
         if args.cpu_mode:
             caffe.set_mode_cpu()
+            print("Set caffe to CPU mode")
         else:
             caffe.set_mode_gpu()
             caffe.set_device(args.gpu_id)
             cfg.GPU_ID = args.gpu_id
+            print("Set caffe to GPU mode, running on GPU {}".format(cfg.GPU_ID))
 
         self.net = caffe.Net(prototxt, caffemodel, caffe.TEST)
 
@@ -148,7 +150,7 @@ class Detector:
         if not Detector.DETECT_RUNNING:
             Detector.DETECT_RUNNING = True
             self.current_frame_header = msg.header
-            print("Starting detection of frame with timestamp {}.".format(msg.header.stamp))
+            print("Starting detection of frame {}.".format(msg.header.seq))
             self.frames_detected += 1
             bridge = CvBridge()
             cv_image = bridge.imgmsg_to_cv2(msg, msg.encoding)
