@@ -43,6 +43,7 @@ class Detector:
         self.current_frame_header = None
         self.frames_detected = 0
         self.detection_start = time.time()
+        self.args = args
         # The first frame's header secs timestamp.
         # self.start_secs = 0
 
@@ -139,6 +140,14 @@ class Detector:
         self.bb_pub.publish(bb_msg)
 
     def frame_detect(self, net, im):
+        if self.args.cpu_mode:
+            caffe.set_mode_cpu()
+            print("Set caffe to CPU mode")
+        else:
+            caffe.set_mode_gpu()
+            caffe.set_device(self.args.gpu_id)
+            cfg.GPU_ID = self.args.gpu_id
+            print("Set caffe to GPU mode, running on GPU {}".format(cfg.GPU_ID))
         """Detect object classes in an image using pre-computed object proposals."""
         # Detect all object classes and regress object bounds
         timer = Timer()
