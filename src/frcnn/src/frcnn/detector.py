@@ -78,6 +78,8 @@ class Detector:
             cfg.GPU_ID = args.gpu_id
             print("Set caffe to GPU mode, running on GPU {}".format(cfg.GPU_ID))
 
+        raw_input()
+
         self.net = caffe.Net(prototxt, caffemodel, caffe.TEST)
 
         print '\n\nLoaded network {:s}'.format(caffemodel)
