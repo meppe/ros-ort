@@ -24,10 +24,10 @@ Once you have met the above extrendencies, clone this repository and initialize 
 	To run the node do ```run_frcnn_track.sh```.
 	
 5. Tracking preview
-	This opens a window to show the tracking result. It subscribes to topic /frcnn/bb_img_tracking. To run the node do ```run_video_stream.sh```
+	This opens a window to show the tracking result. It subscribes to topic /frcnn/bb_img_tracking. To run the node do ```run_video_tracking_view.sh```
 	
 6. Video stream
-	Once all nodes are running start the video stream. To do this, run ```./run_video_stream``.
+	Once all nodes are running start the video stream. To do this, run ```./run_video_stream```.
 
 ## Known issues
 With the docker version 17.03.1-ce (and probably neighbouring versions) you can not run ROS-ORT from an NFS drive due to volume mounting issues
