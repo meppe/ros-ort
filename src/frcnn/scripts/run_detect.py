@@ -12,9 +12,23 @@ Demo script showing detections in sample images.
 See README.md for installation instructions before running.
 """
 
-import argparse
+# Disable X-output for matplotlib
+import matplotlib
+matplotlib.use('pdf')
 
+import argparse
+# import sys
+import _init_paths
+
+# sys.path.append("/opt/ros-ort/devel/lib/python2.7/dist-packages")
+# sys.path.append("/opt/ros/kinetic/lib/python2.7/dist-packages")
+# sys.path.append("/opt/ros-ort/install/lib/python2.7/dist-packages")
+# sys.path.append("/opt/ros-ort/src/frcnn/src")
+# sys.path.append("/opt/ros/kinetic/bin")
+
+# print sys.path
 from frcnn.detector import Detector
+
 
 NETS_PASCAL = {'vgg16': ('VGG16', 'faster_rcnn_models/VGG16_faster_rcnn_final.caffemodel'),
                'zf': ('ZF', 'faster_rcnn_models/ZF_faster_rcnn_final.caffemodel')}

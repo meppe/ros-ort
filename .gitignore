@@ -91,3 +91,4 @@ video_data
 .rosinstall
 .idea
 *.png
+*.caffemodel

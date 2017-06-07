@@ -8,7 +8,6 @@ sys.path.insert(0, ros_slam_path+"/src/frcnn/src/py-faster-rcnn")
 sys.path.insert(0, ros_slam_path+"/src/frcnn/src/py-faster-rcnn/caffe-fast-rcnn/python")
 sys.path.insert(0, ros_slam_path+"/src/frcnn/src/py-faster-rcnn/lib")
 
-
 import rospy
 from ort_msgs.msg import Object_bb_list
 from sensor_msgs.msg import Image
