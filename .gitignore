@@ -92,3 +92,4 @@ video_data
 .idea
 *.png
 *.caffemodel
+py-faster-rcnn

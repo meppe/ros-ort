@@ -19,6 +19,7 @@ this_dir = osp.dirname(__file__)
 
 # Add caffe to PYTHONPATH
 caffe_path = osp.join(this_dir, '..', 'src', 'py-faster-rcnn', 'caffe-fast-rcnn', 'python')
+print caffe_path
 add_path(caffe_path)
 
 # Add lib to PYTHONPATH
