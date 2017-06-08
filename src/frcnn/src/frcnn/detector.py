@@ -27,14 +27,14 @@ CONF_THRESH = 0.2
 class Detector:
     DETECT_RUNNING = False
 
-    def __init__(self, args, models):
+    def __init__(self, classes, prototxt_file, caffemodel_file, args):
 
-        self.models = models
-        model_net = args.model.split("--")
-        model = model_net[0]
-        net = model_net[1]
-        model_info = self.models[model]
-        self.classes = model_info[3]
+        # self.models = models
+        # model_net = args.model.split("--")
+        # model = model_net[0]
+        # net = model_net[1]
+        # model_info = self.models[model]
+        self.classes = classes
         self.current_scores = []
         self.current_boxes = []
         self.current_frame = None
@@ -46,22 +46,23 @@ class Detector:
         # The first frame's header secs timestamp.
         # self.start_secs = 0
 
-        self.CONF_THRESH = 0.8
-        # self.NMS_THRESH = 0.1
+        self.CONF_THRESH = args.conf_threshold
 
         rospy.init_node("frcnn_detector")
         print("node initialized")
         cfg.TEST.HAS_RPN = True  # Use RPN for proposals
 
-        models_dir = "models/" + self.models[model][0]
-        model_net_dir = self.models[model][4][net][0]
-        model_subdir = self.models[model][1]
-        model_pt_file = self.models[model][2]
-        frcnn_path = os.getcwd() + "/src/frcnn/src/py-faster-rcnn"
-        prototxt = os.path.join(frcnn_path, models_dir, model_net_dir,
-                                model_subdir, model_pt_file)
+        # models_dir = "models/" + self.models[model][0]
+        # model_net_dir = self.models[model][4][net][0]
+        # model_subdir = self.models[model][1]
+        # model_pt_file = self.models[model][2]
+        # frcnn_path = os.getcwd() + "/src/frcnn/src/py-faster-rcnn"
+        # prototxt = os.path.join(frcnn_path, models_dir, model_net_dir,
+        #                         model_subdir, model_pt_file)
+        prototxt = prototxt_file
 
-        caffemodel = os.path.join(frcnn_path, 'data', self.models[model][4][net][1])
+        # caffemodel = os.path.join(frcnn_path, 'data', self.models[model][4][net][1])
+        caffemodel = caffemodel_file
         if not os.path.isfile(caffemodel):
             raise IOError(('{:s} not found.\nDid you run ./data/script/'
                            'fetch_faster_rcnn_models.sh?').format(caffemodel))

@@ -1,12 +1,19 @@
 #!/bin/bash
 docker rm ros_video_stream
-xhost +local:`docker inspect --format='{{ .Config.Hostname }}' ros_video_stream` 
+xhost +local:`docker inspect --format='{{ .Config.Hostname }}' ros_video_stream`
+echo "The first and only argument to this script is the relative filepath of the video inside the container"
+if [ $# -eq 0 ]; then
+    filepath="video_data/security_cam_transporter.mp4"
+else
+    filepath=$1
+fi
+working_dir="/opt/ros-ort"
 docker run \
 --rm \
 -v /$(pwd)/src/video_stream_opencv:/opt/ros-ort/src/video_stream_opencv \
 -v /$(pwd)/video_data:/opt/ros-ort/video_data \
 -it \
---workdir="//opt/ros-ort" \
+--workdir=$working_dir \
 --link roscore_kinetic \
 -e ROS_MASTER_URI=http://roscore_kinetic:11311/ \
 --env="DISPLAY" \
@@ -17,9 +24,9 @@ meppe78/ros-kinetic-video-stream \
 bash -c "source '/opt/ros/kinetic/setup.bash' && source '/opt/ros-ort/devel/setup.bash' && \
 			roslaunch src/video_stream_opencv/launch/camera.launch \
 			visualize:=false \
-			video_stream_provider:=/opt/ros-ort/video_data/security_cam_transporter.mp4 \
+			video_stream_provider:="$working_dir"/"$filepath" \
 			camera_name:=frcnn_input \
-			fps:=1"				
+			fps:=5"
 # bash -c "source '/opt/ros/kinetic/setup.bash' && source '/opt/ros-ort/devel/setup.bash' && \
 # 			roslaunch src/video_stream_opencv/launch/camera.launch \
 # 			visualize:=false \

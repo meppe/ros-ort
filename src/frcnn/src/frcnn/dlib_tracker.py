@@ -222,12 +222,12 @@ class DlibTracker(Tracker):
         self.tracker_info_history[timestamp] = self.tracker_info
         self.tracker_update_running = False
 
-    def __init__(self):
+    def __init__(self, args):
         self.trackers = {}
         self.tracker_info = {}
         self.tracker_count = 0
         self.bbs_received = 0
-        self.total_score_threshold = 0.5
+        self.total_score_threshold = args.cum_threshold
         self.total_score_decay = 1.1
         # The higher the numbers the more bounding boxes there are.
         self.iou_threshold = 0.3

@@ -22,7 +22,7 @@ if [ "$1" = "--gpu" ]; then
 	bash -c "cp -rn /py-faster-rcnn /opt/ros-ort/src/frcnn/src/ \
 				&& source '/opt/ros/kinetic/setup.bash' \
 				&& source '/opt/ros-ort/devel/setup.bash' \
-				&& python src/frcnn/scripts/run_detect.py --model pascal--zf"
+				&& python src/frcnn/scripts/run_detect.py --model nico_zf"
 else
 	echo "Running docker with CPU"
 	docker run \
@@ -43,7 +43,7 @@ else
 	bash -c "cp -rn /py-faster-rcnn /opt/ros-ort/src/frcnn/src/ \
 				&& source '/opt/ros/kinetic/setup.bash' \
 				&& source '/opt/ros-ort/devel/setup.bash' \
-				&& python src/frcnn/scripts/run_detect.py --cpu --model pascal--zf"
+				&& python src/frcnn/scripts/run_detect.py --cpu "
 fi
 
 xhost -local:`docker inspect --format='{{ .Config.Hostname }}' ros_frcnn_detect`

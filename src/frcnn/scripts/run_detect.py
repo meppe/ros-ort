@@ -28,20 +28,13 @@ import _init_paths
 
 # print sys.path
 from frcnn.detector import Detector
+from lib.datasets.nico import Nico
+from lib.datasets.pascal_voc import pascal_voc
 
 
-NETS_PASCAL = {'vgg16': ('VGG16', 'faster_rcnn_models/VGG16_faster_rcnn_final.caffemodel'),
-               'zf': ('ZF', 'faster_rcnn_models/ZF_faster_rcnn_final.caffemodel')}
+CLASSES_NICO = Nico.CLASSES
 
-NETS_COCO = {'vgg16': ('VGG16', 'imagenet_models/VGG16.v2.caffemodel'),
-             'zf': ('ZF', 'imagenet_models/ZF.v2.caffemodel')}
-
-CLASSES_PASCAL = ('__background__',
-                   'aeroplane', 'bicycle', 'bird', 'boat',
-                   'bottle', 'bus', 'car', 'cat', 'chair',
-                   'cow', 'diningtable', 'dog', 'horse',
-                   'motorbike', 'person', 'pottedplant',
-                   'sheep', 'sofa', 'train', 'tvmonitor')
+CLASSES_PASCAL = pascal_voc.CLASSES
 
 CLASSES_COCO = ('__background__',
                    'aeroplane0', 'bicycle0', 'bird0', 'boat0',
@@ -65,9 +58,26 @@ CLASSES_COCO = ('__background__',
                     'motorbike3', 'person3', 'pottedplant3',
                     'sheep3', 'sofa3', 'train3', 'tvmonitor3')
 
-MODELS = {'coco': ('coco', 'faster_rcnn_end2end', 'test.prototxt', CLASSES_COCO, NETS_COCO),
-          'pascal': ('pascal_voc', 'faster_rcnn_alt_opt', 'faster_rcnn_test.pt', CLASSES_PASCAL, NETS_PASCAL)}
+MODELS = {
+            # 'coco': ('coco',
+            #        'faster_rcnn_end2end',
+            #        'test.prototxt',
+            #        CLASSES_COCO, NETS_COCO),
+          'pascal_vgg16': (
+                     'src/frcnn/src/data/faster_rcnn_models/VGG16_faster_rcnn_final.caffemodel',
+                     'src/frcnn/src/models/pascal_voc/VGG16/faster_rcnn_end2end/test.prototxt',
+                     CLASSES_PASCAL),
+          'pascal_zf': (
+                     'src/frcnn/src/data/faster_rcnn_models/ZF_faster_rcnn_final.caffemodel',
+                     'src/frcnn/src/models/pascal_voc/ZF/faster_rcnn_end2end/test.prototxt',
+                     CLASSES_PASCAL),
+          'nico_zf': (
+                   'src/frcnn/src/output/faster_rcnn_end2end/nico_2017_trainval/zf_faster_rcnn_iter_700.caffemodel',
+                   'src/frcnn/src/models/nico/ZF/faster_rcnn_end2end/test.prototxt',
+                   CLASSES_NICO),
+          }
 
+# BASE_DIR = "/opt/ros-ort"
 
 def parse_args():
     """Parse input arguments."""
@@ -79,16 +89,16 @@ def parse_args():
                         help='Use CPU mode (overrides --gpu)',
                         action='store_true')
 
-    # parser.add_argument('--net', dest='net', help='Network to use [vgg16]',
-    #                     choices=NETS.keys(), default='vgg16')
+    parser.add_argument('--threshold', dest='conf_threshold',
+                        help='The confidence threshold to detect an object', default=0.05)
+    
 
     poss_models = []
-    for m in MODELS:
-        for n in MODELS[m][4].keys():
-            poss_models.append(m+"--"+n)
+    for m in MODELS.keys():
+        poss_models.append(m)
 
     parser.add_argument('--model', dest='model', help='Model to use [pascal]',
-                        choices=poss_models, default='pascal--vgg16')
+                        choices=poss_models, default='pascal_zf')
 
     args = parser.parse_args()
 
@@ -96,4 +106,11 @@ def parse_args():
 
 if __name__ == '__main__':
     args = parse_args()
-    detector = Detector(args, MODELS)
+    # detector = Detector(args, MODELS)
+    model = args.model
+    # net = args.model.split("--")[1]
+    caffemodel_file = MODELS[model][0]
+    prototxt_file = MODELS[model][1]
+    classes = MODELS[model][2]
+
+    detector = Detector(classes, prototxt_file, caffemodel_file, args)
