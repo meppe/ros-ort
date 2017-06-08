@@ -14,10 +14,9 @@ import lib.annotation.selectinwindow as selectinwindow
 
 class Annotator:
 
-    data_root = "/storage/data/nico2017"
-
-    def __init__(self, object_classes=[]):
-        self.object_classes = list(object_classes)
+    def __init__(self, data_root, classes=[]):
+        self.data_root = data_root
+        self.object_classes = list(classes)
         sys.setrecursionlimit(10 ** 9)
         self.data_path = self.data_root + '/generate_frames/video_frames'
         self.image_path = self.data_root + '/nico2017/JPEGImages'
@@ -118,10 +117,10 @@ class Annotator:
                 print("Invalid input, please select again")
                 continue
             if key == "a":
-                time.sleep( self.sleep_time)
+                time.sleep(self.sleep_time)
                 # print("Destroying all windows...")
                 cv2.destroyAllWindows()
-                time.sleep( self.sleep_time)
+                time.sleep(self.sleep_time)
                 # print("Opening drawing window...")
                 self.add_bb(filepath, img)
             elif key == "d":
@@ -198,24 +197,32 @@ class Annotator:
         self.trackers.append(new_tracker)
 
     def draw_box(self, filepath):
+        # print("1")
         rectI = selectinwindow.dragRect
+        # print("file ", filepath)
         img = cv2.imread(filepath)
+        # print("image read")
         wName = 'Select new bb for {}'.format(filepath)
         im_height = img.shape[0]
         im_width = img.shape[1]
         selectinwindow.init(rectI, img, wName, im_width, im_height)
+        # print("selected")
         cv2.namedWindow(rectI.wname)
+        # print("2")
         cv2.setMouseCallback(rectI.wname, selectinwindow.dragrect, rectI)
+        # print("3")
         # print("Opening drawing window...")
         # time.sleep(0.5)
         while True:
             # display the image
             cv2.imshow(wName, rectI.image)
             key = cv2.waitKey(1) & 0xFF
-
+            # print("key: {}".format(key))
             # if returnflag is True, break from the loop
             if rectI.returnflag == True:
+                # print("returnflag")
                 break
+            # print("4")
         # rectI.returnflag == False
 
         # print "Dragged rectangle coordinates"
