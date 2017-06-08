@@ -1,14 +1,14 @@
 #!/bin/bash
 img_name="ros_frcnn_demo"
 docker rm "$img_name"
-if [ "$1" = "--gpu" ]; then
-    command="nvidia-docker"
-    echo "Running demo in gpu mode"
-    args=""
-else
+if [ "$1" = "--cpu" ]; then
     command="docker"
     args="--cpu"
     echo "Running demo in cpu mode"
+else
+    command="nvidia-docker"
+    echo "Running demo in gpu mode"
+    args=""
 fi
 $command run \
 --rm \

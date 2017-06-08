@@ -59,8 +59,8 @@ def parse_args():
     train_imdb = "nico_2017_trainval"
     test_dir = "nico2017/nico2017"
 
-    model = "700"
-    caffemodel = net.lower() + "_faster_rcnn_iter_" + str(model) + ".caffemodel"
+    iterations = 700
+    caffemodel = net.lower() + "_faster_rcnn_iter_" + str(iterations) + ".caffemodel"
 
     parser = argparse.ArgumentParser(description='Faster R-CNN demo')
     parser.add_argument('--gpu', dest='gpu_id', help='GPU device id to use [0]',
