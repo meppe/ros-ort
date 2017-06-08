@@ -23,6 +23,9 @@ import numpy as np
 import scipy.io as sio
 import caffe, os, sys, cv2
 import argparse
+from lib.datasets.pascal_voc import pascal_voc
+from lib.datasets.coco import coco
+from lib.datasets.nico import Nico
 
 CLASSES = ('__background__',
            'aeroplane', 'bicycle', 'bird', 'boat',
@@ -35,6 +38,57 @@ NETS = {'vgg16': ('VGG16',
                   'VGG16_faster_rcnn_final.caffemodel'),
         'zf': ('ZF',
                   'ZF_faster_rcnn_final.caffemodel')}
+
+base_dir = "/opt/ros-ort/src/frcnn/src/"
+# CLASSES = ()
+
+def parse_args():
+    """Parse input arguments."""
+
+
+    nets = ["ZF, VGG16"]
+    datasets = ["nico", "pascal_voc"]
+    methods = ["faster_rcnn_end2end", "faster_rcnn_alt_opt"]
+    train_imdbs = ["voc_2007_trainval", "nico_2017_trainval"]
+
+    net = "ZF"
+    dataset = "pascal_voc"
+    method = "faster_rcnn_end2end"
+    train_imdb = "voc_2007_trainval"
+
+    model = "70"
+    caffemodel = net.lower() + "_faster_rcnn_iter_" + str(model) + ".caffemodel"
+
+    parser = argparse.ArgumentParser(description='Faster R-CNN demo')
+    parser.add_argument('--gpu', dest='gpu_id', help='GPU device id to use [0]',
+                        default=0, type=int)
+    parser.add_argument('--cpu', dest='cpu_mode',
+                        help='Use CPU mode (overrides --gpu)',
+                        action='store_true')
+    parser.add_argument('--net', dest='net', help='Network to use',
+                        choices=nets, default=net)
+    parser.add_argument('--dataset', dest='dataset',
+                        help='dataset to test with',
+                        default=dataset, type=str, choices=datasets)
+    parser.add_argument('--method', dest='method_name',
+                        help='the method with which was trained',
+                        default=method, type=str, choices=methods)
+    parser.add_argument('--imdb', dest='imdb_name',
+                        help='dataset to train on',
+                        default=train_imdb, type=str, choices=train_imdbs)
+    parser.add_argument('--caffemodel', dest='caffemodel',
+                        help='caffemodel file',
+                        default=caffemodel, type=str)
+
+    args = parser.parse_args()
+
+    global CLASSES
+    if args.dataset == "nico":
+        CLASSES = Nico.CLASSES
+    elif args.dataset == "pascal_voc":
+        CLASSES = pascal_voc.CLASSES
+
+    return args
 
 
 def vis_detections(im, class_name, dets, thresh=0.5):
@@ -97,30 +151,18 @@ def demo(net, image_name):
         dets = dets[keep, :]
         vis_detections(im, cls, dets, thresh=CONF_THRESH)
 
-def parse_args():
-    """Parse input arguments."""
-    parser = argparse.ArgumentParser(description='Faster R-CNN demo')
-    parser.add_argument('--gpu', dest='gpu_id', help='GPU device id to use [0]',
-                        default=0, type=int)
-    parser.add_argument('--cpu', dest='cpu_mode',
-                        help='Use CPU mode (overrides --gpu)',
-                        action='store_true')
-    parser.add_argument('--net', dest='demo_net', help='Network to use [vgg16]',
-                        choices=NETS.keys(), default='vgg16')
 
-    args = parser.parse_args()
-
-    return args
 
 if __name__ == '__main__':
     cfg.TEST.HAS_RPN = True  # Use RPN for proposals
 
     args = parse_args()
-
-    prototxt = os.path.join(cfg.MODELS_DIR, NETS[args.demo_net][0],
+    prototxt = os.path.join(cfg.MODELS_DIR, NETS["vgg16"][0],
                             'faster_rcnn_alt_opt', 'faster_rcnn_test.pt')
+    # prototxt = base_dir + 'models/' + args.dataset + '/' + args.net + '/faster_rcnn_end2end/test.prototxt'
     caffemodel = os.path.join(cfg.DATA_DIR, 'faster_rcnn_models',
-                              NETS[args.demo_net][1])
+                              NETS["vgg16"][1])
+    # caffemodel = os.path.join(base_dir, "output", args.method, args.train_imdb, args.modelfile)
 
     if not os.path.isfile(caffemodel):
         raise IOError(('{:s} not found.\nDid you run ./data/script/'

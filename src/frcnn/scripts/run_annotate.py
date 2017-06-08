@@ -22,6 +22,11 @@ Data generation
             Save image with all bounding boxes
 '''
 
+def generate_ann_files():
+    pass
+
 if __name__ == '__main__':
     annotator = Annotator(Nico.CLASSES)
+    generate_ann_files()
+
 

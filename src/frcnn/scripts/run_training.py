@@ -15,10 +15,10 @@ from lib.fast_rcnn.config import cfg, cfg_from_file, cfg_from_list, get_output_d
 from lib.datasets.factory import get_imdb
 import lib.datasets.imdb
 import caffe
-import argparse
 import pprint
 import numpy as np
 import sys
+import argparse
 
 def parse_args():
     # Default values:
@@ -29,9 +29,9 @@ def parse_args():
     # net = "VGG16"
     net = "ZF"
     # dataset = "coco"
-    # dataset = "nico"
-    # train_imdb = "nico_2017_trainval"
-    # test_imdb = "nico_2017_test"
+    dataset = "nico"
+    train_imdb = "nico_2017_trainval"
+    test_imdb = "nico_2017_test"
     dataset = "pascal_voc"
     train_imdb = "voc_2007_trainval"
     test_imdb = "voc_2007_test"
@@ -52,12 +52,12 @@ def parse_args():
     parser.add_argument('--iters', dest='max_iters',
                         help='number of iterations to train',
                         default=iters, type=int)
-    parser.add_argument('--weights', dest='pretrained_model',
-                        help='initialize with pretrained model weights',
-                        default=base_dir+'/data/imagenet_models/'+net+'.v2.caffemodel', type=str)
     # parser.add_argument('--weights', dest='pretrained_model',
     #                     help='initialize with pretrained model weights',
-    #                     default='None', type=str)
+    #                     default=base_dir+'/data/imagenet_models/'+net+'.v2.caffemodel', type=str)
+    parser.add_argument('--weights', dest='pretrained_model',
+                        help='initialize with pretrained model weights',
+                        default=None, type=str)
     parser.add_argument('--cfg', dest='cfg_file',
                         help='optional config file',
                         default=base_dir+'/'+cfg, type=str)
@@ -120,6 +120,7 @@ if __name__ == '__main__':
         # fix the random seeds (numpy and caffe) for reproducibility
         np.random.seed(cfg.RNG_SEED)
         caffe.set_random_seed(cfg.RNG_SEED)
+
 
     # set up caffe
     if args.cpu_mode:
