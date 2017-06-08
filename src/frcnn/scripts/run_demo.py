@@ -26,21 +26,11 @@ import argparse
 from lib.datasets.pascal_voc import pascal_voc
 from lib.datasets.coco import coco
 from lib.datasets.nico import Nico
+import random
 
-# CLASSES = ('__background__',
-#            'aeroplane', 'bicycle', 'bird', 'boat',
-#            'bottle', 'bus', 'car', 'cat', 'chair',
-#            'cow', 'diningtable', 'dog', 'horse',
-#            'motorbike', 'person', 'pottedplant',
-#            'sheep', 'sofa', 'train', 'tvmonitor')
-
-NETS = {'vgg16': ('VGG16',
-                  'VGG16_faster_rcnn_final.caffemodel'),
-        'zf': ('ZF',
-                  'ZF_faster_rcnn_final.caffemodel')}
 
 base_dir = "/opt/ros-ort/src/frcnn/src/"
-# CLASSES = ()
+CLASSES = ()
 
 def parse_args():
     """Parse input arguments."""
@@ -51,12 +41,16 @@ def parse_args():
     test_dirs = ["nico2017/nico2017", "VOCdevkit2007/VOC2007"]
 
     net = "ZF"
-    dataset = "pascal_voc"
-    dataset = "nico"
     method = "faster_rcnn_end2end"
+
+    # The setting for pascal_voc 2007
+    dataset = "pascal_voc"
     train_imdb = "voc_2007_trainval"
-    train_imdb = "nico_2017_trainval"
     test_dir = "VOCdevkit2007/VOC2007"
+
+    # The setting for nico 2017
+    dataset = "nico"
+    train_imdb = "nico_2017_trainval"
     test_dir = "nico2017/nico2017"
 
     model = "700"
@@ -164,16 +158,11 @@ if __name__ == '__main__':
     cfg.TEST.HAS_RPN = True  # Use RPN for proposals
 
     args = parse_args()
-    # prototxt = os.path.join(cfg.MODELS_DIR, NETS["vgg16"][0],
-    #                         'faster_rcnn_alt_opt', 'faster_rcnn_test.pt')
     prototxt = base_dir + 'models/' + args.dataset + '/' + args.net + '/faster_rcnn_end2end/test.prototxt'
     if not os.path.isfile(prototxt):
         raise IOError('{:s} not found.'.format(prototxt))
 
-    # caffemodel = os.path.join(cfg.DATA_DIR, 'faster_rcnn_models',
-    #                           NETS["vgg16"][1])
     caffemodel = os.path.join(base_dir, "output", args.method, args.train_imdb, args.caffemodel)
-
     if not os.path.isfile(caffemodel):
         raise IOError('{:s} not found.'.format(caffemodel))
 
@@ -192,9 +181,17 @@ if __name__ == '__main__':
     for i in xrange(2):
         _, _= im_detect(net, im)
 
-    im_names = ['000001.jpg', '000002.jpg', '000003.jpg', '000004.jpg']
-    # im_names = ['000001.jpg']
-    for im_name in im_names:
+    test_data = os.path.join("/storage", "data", args.test_dir, "ImageSets", "Main", "test.txt")
+    test_data_file = open(test_data, 'r')
+    im_names = []
+    for line in test_data_file:
+        line = line.replace("\n", "")
+        if line != '':
+            im_names.append(line+".jpg")
+    random.shuffle(im_names)
+    print("Enter the number of random test images that you want to see:")
+    num = int(raw_input())
+    for im_name in im_names[:num]:
         im_file = os.path.join("/storage", "data", args.test_dir, "JPEGImages", im_name)
         print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
         print 'Demo for {}'.format(im_file)
