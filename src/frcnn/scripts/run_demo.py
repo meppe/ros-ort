@@ -27,12 +27,12 @@ from lib.datasets.pascal_voc import pascal_voc
 from lib.datasets.coco import coco
 from lib.datasets.nico import Nico
 
-CLASSES = ('__background__',
-           'aeroplane', 'bicycle', 'bird', 'boat',
-           'bottle', 'bus', 'car', 'cat', 'chair',
-           'cow', 'diningtable', 'dog', 'horse',
-           'motorbike', 'person', 'pottedplant',
-           'sheep', 'sofa', 'train', 'tvmonitor')
+# CLASSES = ('__background__',
+#            'aeroplane', 'bicycle', 'bird', 'boat',
+#            'bottle', 'bus', 'car', 'cat', 'chair',
+#            'cow', 'diningtable', 'dog', 'horse',
+#            'motorbike', 'person', 'pottedplant',
+#            'sheep', 'sofa', 'train', 'tvmonitor')
 
 NETS = {'vgg16': ('VGG16',
                   'VGG16_faster_rcnn_final.caffemodel'),
@@ -44,17 +44,17 @@ base_dir = "/opt/ros-ort/src/frcnn/src/"
 
 def parse_args():
     """Parse input arguments."""
-
-
     nets = ["ZF, VGG16"]
     datasets = ["nico", "pascal_voc"]
     methods = ["faster_rcnn_end2end", "faster_rcnn_alt_opt"]
     train_imdbs = ["voc_2007_trainval", "nico_2017_trainval"]
+    test_dirs = ["nico2017/nico2017", "VOCdevkit2007/VOC2007"]
 
     net = "ZF"
     dataset = "pascal_voc"
     method = "faster_rcnn_end2end"
     train_imdb = "voc_2007_trainval"
+    test_dir = "nico2017/nico2017"
 
     model = "70"
     caffemodel = net.lower() + "_faster_rcnn_iter_" + str(model) + ".caffemodel"
@@ -70,15 +70,18 @@ def parse_args():
     parser.add_argument('--dataset', dest='dataset',
                         help='dataset to test with',
                         default=dataset, type=str, choices=datasets)
-    parser.add_argument('--method', dest='method_name',
+    parser.add_argument('--method', dest='method',
                         help='the method with which was trained',
                         default=method, type=str, choices=methods)
-    parser.add_argument('--imdb', dest='imdb_name',
+    parser.add_argument('--imdb', dest='train_imdb',
                         help='dataset to train on',
                         default=train_imdb, type=str, choices=train_imdbs)
     parser.add_argument('--caffemodel', dest='caffemodel',
                         help='caffemodel file',
                         default=caffemodel, type=str)
+    parser.add_argument('--test_dirs', dest='test_dir',
+                        help='directory that contains testing data',
+                        default=test_dir, type=str)
 
     args = parser.parse_args()
 
@@ -160,13 +163,15 @@ if __name__ == '__main__':
     prototxt = os.path.join(cfg.MODELS_DIR, NETS["vgg16"][0],
                             'faster_rcnn_alt_opt', 'faster_rcnn_test.pt')
     # prototxt = base_dir + 'models/' + args.dataset + '/' + args.net + '/faster_rcnn_end2end/test.prototxt'
+    if not os.path.isfile(prototxt):
+        raise IOError('{:s} not found.'.format(prototxt))
+
     caffemodel = os.path.join(cfg.DATA_DIR, 'faster_rcnn_models',
                               NETS["vgg16"][1])
-    # caffemodel = os.path.join(base_dir, "output", args.method, args.train_imdb, args.modelfile)
+    # caffemodel = os.path.join(base_dir, "output", args.method, args.train_imdb, args.caffemodel)
 
     if not os.path.isfile(caffemodel):
-        raise IOError(('{:s} not found.\nDid you run ./data/script/'
-                       'fetch_faster_rcnn_models.sh?').format(caffemodel))
+        raise IOError('{:s} not found.'.format(caffemodel))
 
     if args.cpu_mode:
         caffe.set_mode_cpu()
@@ -183,8 +188,9 @@ if __name__ == '__main__':
     for i in xrange(2):
         _, _= im_detect(net, im)
 
-    im_names = ['000456.jpg', '000542.jpg', '001150.jpg',
-                '001763.jpg', '004545.jpg']
+    # im_names = ['000456.jpg', '000542.jpg', '001150.jpg',
+    #             '001763.jpg', '004545.jpg']
+    im_names = ['000456.jpg', '000542.jpg']
     for im_name in im_names:
         print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
         print 'Demo for data/demo/{}'.format(im_name)
