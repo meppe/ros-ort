@@ -14,16 +14,19 @@ import lib.annotation.selectinwindow as selectinwindow
 
 class Annotator:
 
+    data_root = "/storage/data/nico2017"
+
     def __init__(self, object_classes=[]):
         self.object_classes = list(object_classes)
         sys.setrecursionlimit(10 ** 9)
-        self.data_path = '/storage/data/nico2017/generate_frames/video_frames'
-        self.image_path = '/storage/data/nico2017/nico2017/JPEGImages'
-        self.annotation_path = '/storage/data/nico2017/nico2017/Annotations'
+        self.data_path = self.data_root + '/generate_frames/video_frames'
+        self.image_path = self.data_root + '/nico2017/JPEGImages'
+        self.annotation_path = self.data_root + '/nico2017/Annotations'
         self.trackers = []
         self.sleep_time = 0.1
         self.next_tracker_id = 0
         self.current_sample_id = self.get_next_sample_id()
+        self.stop_annotate = False
         for subdir, dirs, _ in os.walk(self.data_path):
             for dir in dirs:
                 self.trackers = []
@@ -34,6 +37,8 @@ class Annotator:
                         if filepath.endswith(".jpg"):
                             self.update_bbs(filepath)
                         self.write_data(filepath)
+                        if self.stop_annotate == True:
+                            exit(1)
 
     def get_next_sample_id(self):
         next_id = 0
@@ -102,7 +107,7 @@ class Annotator:
         while key != "n":
             print(
             "While window is active, press <a> to add a new bounding box (a new window will open), " +
-            "<d> to delete a bounding box and <n> for next frame.")
+            "<d> to delete a bounding box, <n> for next frame and <q> to stop annotation.")
             # print("Opening display window...")
             img = cv2.imread(filepath, 1)
             time.sleep( self.sleep_time)
@@ -132,6 +137,9 @@ class Annotator:
                         cv2.destroyAllWindows()
                         time.sleep( self.sleep_time)
                         break
+            elif key == "q":
+                self.stop_annotate = True
+                break
             time.sleep(self.sleep_time)
             print("destroying all windows")
             cv2.destroyAllWindows()
@@ -208,7 +216,7 @@ class Annotator:
             # if returnflag is True, break from the loop
             if rectI.returnflag == True:
                 break
-        rectI.returnflag == False
+        # rectI.returnflag == False
 
         # print "Dragged rectangle coordinates"
         print str(rectI.outRect.x) + ',' + str(rectI.outRect.y) + ',' + \
