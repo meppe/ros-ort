@@ -90,7 +90,7 @@ def parse_args():
                         action='store_true')
 
     parser.add_argument('--threshold', dest='conf_threshold',
-                        help='The confidence threshold to detect an object', default=0.05)
+                        help='The confidence threshold to detect an object', default=0.7)
     
 
     poss_models = []

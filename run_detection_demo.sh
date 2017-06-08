@@ -1,4 +1,5 @@
 #!/bin/bash
+# This script is to show detection in some sample images. No videos, no streaming, just to verify training.
 img_name="ros_frcnn_demo"
 docker rm "$img_name"
 if [ "$1" = "--cpu" ]; then
@@ -28,4 +29,4 @@ $command run \
 --entrypoint="/dummy_entrypoint.sh" \
 meppe78/ros-kinetic-frcnn-training \
 bash -c "cp -rn /py-faster-rcnn /opt/ros-ort/src/frcnn/src/ \
-        && python src/frcnn/scripts/run_demo.py $args --set DATA_DIR /storage/data"
+        && python src/frcnn/scripts/run_detection_demo.py $args --set DATA_DIR /storage/data"
