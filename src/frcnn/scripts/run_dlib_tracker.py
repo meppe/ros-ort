@@ -11,7 +11,7 @@ def parse_args():
     """Parse input arguments."""
     parser = argparse.ArgumentParser(description='Tracking module for ros-ort')
     parser.add_argument('--cum_threshold', dest='cum_threshold', help='The cumulative threshold over time to keep a tracker',
-                        default=0.5, type=float)
+                        default=0.3, type=float)
 
     args = parser.parse_args()
 

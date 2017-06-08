@@ -90,7 +90,7 @@ def parse_args():
                         action='store_true')
 
     parser.add_argument('--threshold', dest='conf_threshold',
-                        help='The confidence threshold to detect an object', default=0.7)
+                        help='The confidence threshold to detect an object', default=0.4)
     
 
     poss_models = []
@@ -98,7 +98,7 @@ def parse_args():
         poss_models.append(m)
 
     parser.add_argument('--model', dest='model', help='Model to use [pascal]',
-                        choices=poss_models, default='pascal_zf')
+                        choices=poss_models, default='pascal_vgg16')
 
     args = parser.parse_args()
 
@@ -106,9 +106,7 @@ def parse_args():
 
 if __name__ == '__main__':
     args = parse_args()
-    # detector = Detector(args, MODELS)
     model = args.model
-    # net = args.model.split("--")[1]
     caffemodel_file = MODELS[model][0]
     prototxt_file = MODELS[model][1]
     classes = MODELS[model][2]
