@@ -52,9 +52,12 @@ def parse_args():
 
     net = "ZF"
     dataset = "pascal_voc"
+    dataset = "nico"
     method = "faster_rcnn_end2end"
     train_imdb = "voc_2007_trainval"
+    train_imdb = "nico_2017_trainval"
     test_dir = "VOCdevkit2007/VOC2007"
+    test_dir = "nico2017/nico2017"
 
     model = "700"
     caffemodel = net.lower() + "_faster_rcnn_iter_" + str(model) + ".caffemodel"
@@ -190,6 +193,7 @@ if __name__ == '__main__':
         _, _= im_detect(net, im)
 
     im_names = ['000001.jpg', '000002.jpg', '000003.jpg', '000004.jpg']
+    # im_names = ['000001.jpg']
     for im_name in im_names:
         im_file = os.path.join("/storage", "data", args.test_dir, "JPEGImages", im_name)
         print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'

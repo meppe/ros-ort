@@ -32,9 +32,9 @@ def parse_args():
     dataset = "nico"
     train_imdb = "nico_2017_trainval"
     test_imdb = "nico_2017_test"
-    dataset = "pascal_voc"
-    train_imdb = "voc_2007_trainval"
-    test_imdb = "voc_2007_test"
+    # dataset = "pascal_voc"
+    # train_imdb = "voc_2007_trainval"
+    # test_imdb = "voc_2007_test"
     pt_dir = dataset
     iters = 700
     cfg = 'experiments/cfgs/faster_rcnn_end2end.yml'
@@ -52,12 +52,12 @@ def parse_args():
     parser.add_argument('--iters', dest='max_iters',
                         help='number of iterations to train',
                         default=iters, type=int)
-    # parser.add_argument('--weights', dest='pretrained_model',
-    #                     help='initialize with pretrained model weights',
-    #                     default=base_dir+'/data/imagenet_models/'+net+'.v2.caffemodel', type=str)
     parser.add_argument('--weights', dest='pretrained_model',
                         help='initialize with pretrained model weights',
-                        default=None, type=str)
+                        default=base_dir+'/data/imagenet_models/'+net+'.v2.caffemodel', type=str)
+    # parser.add_argument('--weights', dest='pretrained_model',
+    #                     help='initialize with pretrained model weights',
+    #                     default=None, type=str)
     parser.add_argument('--cfg', dest='cfg_file',
                         help='optional config file',
                         default=base_dir+'/'+cfg, type=str)
