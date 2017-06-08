@@ -47,16 +47,16 @@ def parse_args():
     nets = ["ZF, VGG16"]
     datasets = ["nico", "pascal_voc"]
     methods = ["faster_rcnn_end2end", "faster_rcnn_alt_opt"]
-    train_imdbs = ["voc_2007_trainval", "nico_2017_trainval"]
+    train_imdbs = ["nico_2017_trainval", "voc_2007_trainval"]
     test_dirs = ["nico2017/nico2017", "VOCdevkit2007/VOC2007"]
 
     net = "ZF"
     dataset = "pascal_voc"
     method = "faster_rcnn_end2end"
     train_imdb = "voc_2007_trainval"
-    test_dir = "nico2017/nico2017"
+    test_dir = "VOCdevkit2007/VOC2007"
 
-    model = "70"
+    model = "700"
     caffemodel = net.lower() + "_faster_rcnn_iter_" + str(model) + ".caffemodel"
 
     parser = argparse.ArgumentParser(description='Faster R-CNN demo')
@@ -81,7 +81,7 @@ def parse_args():
                         default=caffemodel, type=str)
     parser.add_argument('--test_dirs', dest='test_dir',
                         help='directory that contains testing data',
-                        default=test_dir, type=str)
+                        default=test_dir, type=str, choices=test_dirs)
 
     args = parser.parse_args()
 
@@ -126,11 +126,10 @@ def vis_detections(im, class_name, dets, thresh=0.5):
     plt.tight_layout()
     plt.draw()
 
-def demo(net, image_name):
+def demo(net, im_file):
     """Detect object classes in an image using pre-computed object proposals."""
 
     # Load the demo image
-    im_file = os.path.join(cfg.DATA_DIR, 'demo', image_name)
     im = cv2.imread(im_file)
 
     # Detect all object classes and regress object bounds
@@ -142,8 +141,10 @@ def demo(net, image_name):
            '{:d} object proposals').format(timer.total_time, boxes.shape[0])
 
     # Visualize detections for each class
-    CONF_THRESH = 0.8
-    NMS_THRESH = 0.3
+    # CONF_THRESH = 0.8
+    # NMS_THRESH = 0.3
+    CONF_THRESH = 0.01
+    NMS_THRESH = 0.01
     for cls_ind, cls in enumerate(CLASSES[1:]):
         cls_ind += 1 # because we skipped background
         cls_boxes = boxes[:, 4*cls_ind:4*(cls_ind + 1)]
@@ -160,15 +161,15 @@ if __name__ == '__main__':
     cfg.TEST.HAS_RPN = True  # Use RPN for proposals
 
     args = parse_args()
-    prototxt = os.path.join(cfg.MODELS_DIR, NETS["vgg16"][0],
-                            'faster_rcnn_alt_opt', 'faster_rcnn_test.pt')
-    # prototxt = base_dir + 'models/' + args.dataset + '/' + args.net + '/faster_rcnn_end2end/test.prototxt'
+    # prototxt = os.path.join(cfg.MODELS_DIR, NETS["vgg16"][0],
+    #                         'faster_rcnn_alt_opt', 'faster_rcnn_test.pt')
+    prototxt = base_dir + 'models/' + args.dataset + '/' + args.net + '/faster_rcnn_end2end/test.prototxt'
     if not os.path.isfile(prototxt):
         raise IOError('{:s} not found.'.format(prototxt))
 
-    caffemodel = os.path.join(cfg.DATA_DIR, 'faster_rcnn_models',
-                              NETS["vgg16"][1])
-    # caffemodel = os.path.join(base_dir, "output", args.method, args.train_imdb, args.caffemodel)
+    # caffemodel = os.path.join(cfg.DATA_DIR, 'faster_rcnn_models',
+    #                           NETS["vgg16"][1])
+    caffemodel = os.path.join(base_dir, "output", args.method, args.train_imdb, args.caffemodel)
 
     if not os.path.isfile(caffemodel):
         raise IOError('{:s} not found.'.format(caffemodel))
@@ -188,12 +189,11 @@ if __name__ == '__main__':
     for i in xrange(2):
         _, _= im_detect(net, im)
 
-    # im_names = ['000456.jpg', '000542.jpg', '001150.jpg',
-    #             '001763.jpg', '004545.jpg']
-    im_names = ['000456.jpg', '000542.jpg']
+    im_names = ['000001.jpg', '000002.jpg', '000003.jpg', '000004.jpg']
     for im_name in im_names:
+        im_file = os.path.join("/storage", "data", args.test_dir, "JPEGImages", im_name)
         print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
-        print 'Demo for data/demo/{}'.format(im_name)
-        demo(net, im_name)
+        print 'Demo for {}'.format(im_file)
+        demo(net, im_file)
 
     plt.show()
