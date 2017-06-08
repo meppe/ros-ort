@@ -1,4 +1,4 @@
-#!/usr/bin/env bash#!/usr/bin/env bash
+#!/usr/bin/env bash#!
 data_root="/storage/data/nico2017/generate_frames"
 mkdir resized_videos
 mkdir video_frames
