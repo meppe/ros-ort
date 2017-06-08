@@ -21,20 +21,26 @@ import sys
 import argparse
 
 def parse_args():
-    # Default values:
+    ###################
+    # Default values: #
+    ###################
+
     # gpu_id = 0
-    # py_faster_rcnn_dir = "/opt/ros-ort/src/frcnn/src/py-faster-rcnn"
     base_dir = "/opt/ros-ort/src/frcnn/src/"
     # net = "VGG_CNN_M_1024"
     # net = "VGG16"
     net = "ZF"
+
     # dataset = "coco"
+
     dataset = "nico"
     train_imdb = "nico_2017_trainval"
     test_imdb = "nico_2017_test"
+
     # dataset = "pascal_voc"
     # train_imdb = "voc_2007_trainval"
     # test_imdb = "voc_2007_test"
+
     pt_dir = dataset
     iters = 700
     cfg = 'experiments/cfgs/faster_rcnn_end2end.yml'
@@ -76,7 +82,6 @@ def parse_args():
 
     if len(sys.argv) == 1:
         parser.print_help()
-        # sys.exit(1)
 
     args = parser.parse_args()
     return args

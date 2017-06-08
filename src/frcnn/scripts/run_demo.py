@@ -27,10 +27,15 @@ from lib.datasets.pascal_voc import pascal_voc
 from lib.datasets.coco import coco
 from lib.datasets.nico import Nico
 import random
+from lib.fast_rcnn.config import cfg, cfg_from_file, cfg_from_list, get_output_dir
+import pprint
 
 
 base_dir = "/opt/ros-ort/src/frcnn/src/"
 CLASSES = ()
+
+CONF_THRESH = 0.7
+
 
 def parse_args():
     """Parse input arguments."""
@@ -42,6 +47,7 @@ def parse_args():
 
     net = "ZF"
     method = "faster_rcnn_end2end"
+    cfg = 'experiments/cfgs/faster_rcnn_end2end.yml'
 
     # The setting for pascal_voc 2007
     dataset = "pascal_voc"
@@ -79,6 +85,12 @@ def parse_args():
     parser.add_argument('--test_dirs', dest='test_dir',
                         help='directory that contains testing data',
                         default=test_dir, type=str, choices=test_dirs)
+    parser.add_argument('--cfg', dest='cfg_file',
+                        help='optional config file',
+                        default=base_dir + '/' + cfg, type=str)
+    parser.add_argument('--set', dest='set_cfgs',
+                        help='set config keys', default=None,
+                        nargs=argparse.REMAINDER)
 
     args = parser.parse_args()
 
@@ -125,7 +137,7 @@ def vis_detections(im, class_name, dets, thresh=0.5):
 
 def demo(net, im_file):
     """Detect object classes in an image using pre-computed object proposals."""
-
+    global CONF_THRESH
     # Load the demo image
     im = cv2.imread(im_file)
 
@@ -138,26 +150,37 @@ def demo(net, im_file):
            '{:d} object proposals').format(timer.total_time, boxes.shape[0])
 
     # Visualize detections for each class
-    # CONF_THRESH = 0.8
-    # NMS_THRESH = 0.3
-    CONF_THRESH = 0.01
-    NMS_THRESH = 0.01
+
     for cls_ind, cls in enumerate(CLASSES[1:]):
         cls_ind += 1 # because we skipped background
         cls_boxes = boxes[:, 4*cls_ind:4*(cls_ind + 1)]
         cls_scores = scores[:, cls_ind]
         dets = np.hstack((cls_boxes,
                           cls_scores[:, np.newaxis])).astype(np.float32)
-        keep = nms(dets, NMS_THRESH)
+        keep = nms(dets, cfg.TEST.NMS)
         dets = dets[keep, :]
         vis_detections(im, cls, dets, thresh=CONF_THRESH)
 
 
 
 if __name__ == '__main__':
+    args = parse_args()
+    print('Called with args:')
+    print(args)
+
+    if args.cfg_file is not None:
+        cfg_from_file(args.cfg_file)
+    if args.set_cfgs is not None:
+        cfg_from_list(args.set_cfgs)
+
+    cfg.GPU_ID = args.gpu_id
+
+    print('Using config:')
+    pprint.pprint(cfg)
+
     cfg.TEST.HAS_RPN = True  # Use RPN for proposals
 
-    args = parse_args()
+
     prototxt = base_dir + 'models/' + args.dataset + '/' + args.net + '/faster_rcnn_end2end/test.prototxt'
     if not os.path.isfile(prototxt):
         raise IOError('{:s} not found.'.format(prototxt))
@@ -181,7 +204,9 @@ if __name__ == '__main__':
     for i in xrange(2):
         _, _= im_detect(net, im)
 
-    test_data = os.path.join("/storage", "data", args.test_dir, "ImageSets", "Main", "test.txt")
+    data_dir = cfg.DATA_DIR
+
+    test_data = os.path.join(data_dir, args.test_dir, "ImageSets", "Main", "test.txt")
     test_data_file = open(test_data, 'r')
     im_names = []
     for line in test_data_file:
@@ -192,7 +217,7 @@ if __name__ == '__main__':
     print("Enter the number of random test images that you want to see:")
     num = int(raw_input())
     for im_name in im_names[:num]:
-        im_file = os.path.join("/storage", "data", args.test_dir, "JPEGImages", im_name)
+        im_file = os.path.join(data_dir, args.test_dir, "JPEGImages", im_name)
         print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
         print 'Demo for {}'.format(im_file)
         demo(net, im_file)
