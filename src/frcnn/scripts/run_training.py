@@ -37,7 +37,7 @@ def parse_args():
     # train_imdb = "voc_2007_trainval"
 
     pt_dir = dataset
-    iters = 70
+    iters = 70000
     cfg = 'experiments/cfgs/faster_rcnn_end2end.yml'
 
     """

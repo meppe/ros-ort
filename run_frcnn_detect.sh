@@ -1,6 +1,7 @@
 #!/bin/bash
 docker rm ros_frcnn_detect
-xhost +local:`docker inspect --format='{{ .Config.Hostname }}' ros_frcnn_detect` 
+xhost +local:`docker inspect --format='{{ .Config.Hostname }}' ros_frcnn_detect`
+### If using ZF models, run with a very low conf threshold
 if [ "$1" = "--gpu" ]; then
 	echo "Running nvidia-docker with GPU"
 	nvidia-docker run \
@@ -22,7 +23,7 @@ if [ "$1" = "--gpu" ]; then
 	bash -c "cp -rn /py-faster-rcnn /opt/ros-ort/src/frcnn/src/ \
 				&& source '/opt/ros/kinetic/setup.bash' \
 				&& source '/opt/ros-ort/devel/setup.bash' \
-				&& python src/frcnn/scripts/run_detect.py"
+				&& python src/frcnn/scripts/run_detect.py --threshold 0.005 --model nico_zf"
 else
 	echo "Running docker with CPU"
 	docker run \
