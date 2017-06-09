@@ -20,29 +20,24 @@ import numpy as np
 import sys
 import argparse
 
+BASE_DIR = "/opt/ros-ort/src/frcnn/src/"
+
 def parse_args():
     ###################
     # Default values: #
     ###################
 
-    # gpu_id = 0
-    base_dir = "/opt/ros-ort/src/frcnn/src/"
-    # net = "VGG_CNN_M_1024"
-    # net = "VGG16"
-    net = "ZF"
-
-    # dataset = "coco"
+    net = "VGG16"
+    # net = "ZF"
 
     dataset = "nico"
     train_imdb = "nico_2017_trainval"
-    test_imdb = "nico_2017_test"
 
     # dataset = "pascal_voc"
     # train_imdb = "voc_2007_trainval"
-    # test_imdb = "voc_2007_test"
 
     pt_dir = dataset
-    iters = 700
+    iters = 70
     cfg = 'experiments/cfgs/faster_rcnn_end2end.yml'
 
     """
@@ -54,19 +49,19 @@ def parse_args():
                         default=0, type=int)
     parser.add_argument('--solver', dest='solver',
                         help='solver prototxt',
-                        default=base_dir+'models/'+pt_dir+'/'+net+'/faster_rcnn_end2end/solver.prototxt', type=str)
+                        default=BASE_DIR+'models/'+pt_dir+'/'+net+'/faster_rcnn_end2end/solver.prototxt', type=str)
     parser.add_argument('--iters', dest='max_iters',
                         help='number of iterations to train',
                         default=iters, type=int)
     parser.add_argument('--weights', dest='pretrained_model',
                         help='initialize with pretrained model weights',
-                        default=base_dir+'/data/imagenet_models/'+net+'.v2.caffemodel', type=str)
+                        default=BASE_DIR+'/data/imagenet_models/'+net+'.v2.caffemodel', type=str)
     # parser.add_argument('--weights', dest='pretrained_model',
     #                     help='initialize with pretrained model weights',
     #                     default=None, type=str)
     parser.add_argument('--cfg', dest='cfg_file',
                         help='optional config file',
-                        default=base_dir+'/'+cfg, type=str)
+                        default=BASE_DIR+'/'+cfg, type=str)
     parser.add_argument('--imdb', dest='imdb_name',
                         help='dataset to train on',
                         default=train_imdb, type=str)
