@@ -75,6 +75,10 @@ MODELS = {
                    'src/frcnn/src/output/faster_rcnn_end2end/nico_2017_trainval/zf_faster_rcnn_iter_700.caffemodel',
                    'src/frcnn/src/models/nico/ZF/faster_rcnn_end2end/test.prototxt',
                    CLASSES_NICO),
+          'nico_vgg16': (
+                   'src/frcnn/src/output/faster_rcnn_end2end/nico_2017_trainval/vgg16_faster_rcnn_iter_70000.caffemodel',
+                   'src/frcnn/src/models/nico/VGG16/faster_rcnn_end2end/test.prototxt',
+                   CLASSES_NICO),
           }
 
 # BASE_DIR = "/opt/ros-ort"
