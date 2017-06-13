@@ -74,9 +74,11 @@ class Tracker:
         interface_string = interface_string[5:] # The first 5 letters are "data:"
         if interface_string == "all":
             self.classes_to_display = []
+            print("Displaying all classes.")
         elif interface_string == "mask":
             # Toggle masking
-            self.mask_objects = (False and self.mask_objects)
+            self.mask_objects = not self.mask_objects
+            print("Setting masking to {}".format(self.mask_objects))
         elif interface_string[:5] == "file:":
             fname = interface_string[5:]
             print ("Setting file to write to {} ".format(fname))
@@ -128,10 +130,9 @@ class Tracker:
         width = im.shape[1]
         height = im.shape[0]
         depth = 3
-        im_zero_mask = np.zeros(shape=(height, width, depth), dtype=np.uint8)
-        obj_box_masks = {}
-        for obj_id, bb in bbs.items():
 
+        obj_boxes_mask = np.zeros(shape=(height, width, depth), dtype=np.uint8)
+        for obj_id, bb in bbs.items():
             # Throw away those bbs that do not show one of the classes to display
             if self.classes_to_display != []:
                 print("Only the object classes {} are allowed!".format(self.classes_to_display))
@@ -146,7 +147,7 @@ class Tracker:
 
             # Generate object box masks
             bbox_arr = np.array([[ul[0], ul[1]], [ul[0], lr[1]], [lr[0], lr[1]], [lr[0], ul[1]]], dtype=np.int32)
-            obj_box_masks[obj_id] = cv2.fillPoly(im_zero_mask, [bbox_arr], mask_color)
+            cv2.fillPoly(obj_boxes_mask, [bbox_arr], mask_color)
 
             # Draw rectangle and write label if not masking objects
             if not self.mask_objects:
@@ -155,7 +156,10 @@ class Tracker:
                 # Labels
                 bbox_text = []
                 bbox_text.append("{:s}".format("obj_" + str(obj_id)))
-                for cls in sorted(bb["classes"], key=bb["classes"].get):
+                # print bb
+                for cls in sorted(bb["classes"], key=bb["classes"].get, reverse=True):
+                    if self.classes_to_display != [] and cls not in self.classes_to_display:
+                        continue
                     scr = bb["classes"][cls]
                     bbox_text.append("{} -- {:.2f}".format(cls, scr))
                 font_height = 12
@@ -165,14 +169,11 @@ class Tracker:
                 for i, txt in enumerate(bbox_text):
                     line_ul = (txt_ul[0], txt_ul[1] + font_height * i)
                     im = cv2.putText(im, txt, line_ul, cv2.FONT_HERSHEY_SIMPLEX, 0.4, font_color, 1, cv2.LINE_AA)
-        if self.mask_objects:
-            full_mask = im_zero_mask
-            for ob_id, obm in obj_box_masks.items():
-                full_mask += obm
-            np.clip(full_mask, 0, 1, out=full_mask)
-            im *= full_mask
 
-            inverse_mask = (full_mask - 1) * (-1)
+        if self.mask_objects:
+            np.clip(obj_boxes_mask, 0, 1, out=obj_boxes_mask)
+            im *= obj_boxes_mask
+            inverse_mask = (obj_boxes_mask - 1) * (-1)
             inverse_mask *= bg_color
             inverse_mask = np.uint8(inverse_mask)
             im += inverse_mask
@@ -296,7 +297,7 @@ class Tracker:
         # image queue to assure that trackers are started with frames on which objectes were detected
         # self.sub_camera_raw_detection = rospy.Subscriber("/frcnn/bb_img", Image, self.cb_camera_raw, queue_size=10)
         self.bb_img_pub = rospy.Publisher('/frcnn/bb_img_tracking', Image, queue_size=10)
-        self.sub_bb = rospy.Subscriber("/frcnn/classes", String, self.cb_txt_interface, queue_size=10)
+        self.sub_bb = rospy.Subscriber("/frcnn/interface_input", String, self.cb_txt_interface, queue_size=10)
         self.last_img_timestamp = 0
         self.mask_objects = mask_objects
         self.classes_to_display = classes_to_display

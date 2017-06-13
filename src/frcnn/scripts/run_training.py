@@ -31,7 +31,8 @@ def parse_args():
     net = "ZF"
 
     dataset = "nico"
-    train_imdb = "nico_2017_trainval"
+    # train_imdb = "nico_2017_trainval"
+    train_imdb = "nico_2017_all"
 
     # dataset = "pascal_voc"
     # train_imdb = "voc_2007_trainval"

@@ -44,7 +44,7 @@ else
 	bash -c "cp -rn /py-faster-rcnn /opt/ros-ort/src/frcnn/src/ \
 				&& source '/opt/ros/kinetic/setup.bash' \
 				&& source '/opt/ros-ort/devel/setup.bash' \
-				&& python src/frcnn/scripts/run_detect.py --cpu "
+				&& python src/frcnn/scripts/run_detect.py --cpu --threshold 0.005 --model nico_zf"
 fi
 
 xhost -local:`docker inspect --format='{{ .Config.Hostname }}' ros_frcnn_detect`

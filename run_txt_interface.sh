@@ -1,9 +1,9 @@
 #!/bin/bash
-docker rm ros_kinetic_enter_classes
+docker rm ros_kinetic_txt_interface
 docker run \
 -it \
 --rm \
---name ros_kinetic_enter_classes \
+--name ros_kinetic_txt_interface \
 --link roscore_kinetic \
 -e ROS_MASTER_URI=http://roscore_kinetic:11311/ \
 meppe78/ros-core-kinetic \
@@ -16,11 +16,11 @@ do
 	Enter \"mask\" to toggle object masking.
 	Enter \"file:<path>/<to>/<file>\" to specify a file for output.
 	Enter \"exit\" to exit."
-	read classes
-	if [ "$classes" = exit ]; then
+	read input
+	if [ "$input" = exit ]; then
 	    break
 	fi
-	echo "Will now only display the following classes: $classes"
-	rostopic pub frcnn/classes std_msgs/String "$classes"
+	echo "You entered: $input"
+	rostopic pub frcnn/interface_input std_msgs/String "$input"
 done
 '

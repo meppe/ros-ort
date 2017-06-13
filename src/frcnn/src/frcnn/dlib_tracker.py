@@ -54,10 +54,14 @@ class DlibTracker(Tracker):
             if self.last_detected_bb_timestamp <= k:
                 closest_timestamp = k
                 break
-        closest_timestamp = min(self.img_stream_queue.keys(), key=lambda x: abs(x-bb_timestamp))
+        if len(self.img_stream_queue.keys()) == 0:
+            closest_timestamp = None
+        else:
+            closest_timestamp = min(self.img_stream_queue.keys(), key=lambda x: abs(x-bb_timestamp))
+
         if closest_timestamp == None:
             print("Warning, no frame for BB with timestamp {} has been found.".format(bb_timestamp))
-            print(img_queue_keys)
+            # print(img_queue_keys)
             return
         if closest_timestamp != bb_timestamp:
             print("Frame {} has not been received. Processing the closest frame {} instead.".format(
@@ -158,6 +162,12 @@ class DlibTracker(Tracker):
         trackers_to_delete = set()
         num_trackers = len(self.tracker_info.keys())
         for object_id in self.tracker_info.keys():
+            cls_to_del = []
+            for cls in self.tracker_info[object_id]["classes"]:
+                if self.tracker_info[object_id]["classes"][cls] < self.class_score_threshold:
+                    cls_to_del.append(cls)
+            for cls in cls_to_del:
+                del self.tracker_info[object_id]["classes"][cls]
             totalscore = sum(self.tracker_info[object_id]["classes"].values())
             if totalscore < self.total_score_threshold:
                 print("Tracker for object {} has a low score of {}. It will be removed.".format(
@@ -228,10 +238,11 @@ class DlibTracker(Tracker):
         self.tracker_count = 0
         self.bbs_received = 0
         self.total_score_threshold = args.cum_threshold
+        self.class_score_threshold = args.class_threshold
         self.total_score_decay = 1.1
         # The higher the numbers the more bounding boxes there are.
         self.iou_threshold = 0.3
-        self.max_trackers = 6
+        self.max_trackers = 8
         self.tracker_alignment_running = False
         self.tracker_update_running = False
         print ("Running tracker with arguments {}.".format(args))

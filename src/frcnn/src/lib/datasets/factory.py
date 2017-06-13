@@ -16,7 +16,7 @@ from lib.datasets.nico import Nico
 import numpy as np
 
 for year in ['2017']:
-    for split in ['train', 'val', 'trainval', 'test']:
+    for split in ['train', 'val', 'trainval', 'test', 'all']:
         name = 'nico_{}_{}'.format(year, split)
         __sets[name] = (lambda split=split, year=year: Nico(split, year))
 
