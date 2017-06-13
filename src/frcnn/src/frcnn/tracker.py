@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import rospy
 from ort_msgs.msg import Object_bb_list
+from std_msgs.msg import String
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 from sklearn.cluster import AffinityPropagation, MeanShift
@@ -45,6 +46,7 @@ class Tracker:
         self.last_detected_bbs = Tracker.bb_msg_to_bb_dict(msg)
 
         self.last_detected_bb_timestamp = int(msg.frame_timestamp)
+        self.last_detected_bb_timestamp = int(msg.frame_timestamp)
 
         print("Received BB object detections for frame {}. Last image frame is {}.".format(
             self.last_detected_bb_timestamp, self.last_img_timestamp))
@@ -66,6 +68,23 @@ class Tracker:
         self.img_stream_queue = img_queue_to_keep
         self.tracker_info_history = tracker_history_to_keep
 
+    def cb_txt_interface(self, interface_string_msg):
+        print "Received classes string message: {}".format(str(interface_string_msg))
+        interface_string = str(interface_string_msg).replace(" ", "")
+        interface_string = interface_string[5:] # The first 5 letters are "data:"
+        if interface_string == "all":
+            self.classes_to_display = []
+        elif interface_string == "mask":
+            # Toggle masking
+            self.mask_objects = (False and self.mask_objects)
+        elif interface_string[:5] == "file:":
+            fname = interface_string[5:]
+            print ("Setting file to write to {} ".format(fname))
+            self.write_to_file = fname
+            # Toggle masking
+        else:
+            self.classes_to_display = interface_string.split(",")
+
     # This is meant to align the newly detected bbs with the existing ones from the tracking.
     # This method should be overwritten for more sophisticated tracking.
     def align_detections_and_trackers(self, bbs):
@@ -81,6 +100,17 @@ class Tracker:
 
     # @profile
     def vis_tracking(self, im, bbs):
+        '''
+
+        :param im: The image to display.
+        :param bbs: The bounding boxes with object id and class information to display.
+        :param classes: If a non-empty list is given, then only display object classes in the list.
+        :param bg_color: If not None, then replace all background around the bounding boxes with this color, specified as RGB triple.
+        :param write_to_file: If a file path is provided, then write image as file to disk.
+        :param display_labels: If false, do not display labels around boxes.
+        :return:
+        '''
+
         # draw grid
         # factor = 100
         # for y in range((im.shape[0] / factor) + 1):
@@ -90,26 +120,67 @@ class Tracker:
         # for x in range((im.shape[1] / factor) + 1):
         #     x = x * factor
         #     im = cv2.line(im, (x,0), (x, im.shape[0]-1 ), (255,0,0), 2)
-
+        # print("Image shape: {}".format(im.shape))
+        rect_color = (0, 0, 255)
+        font_color = (255, 255, 255)
+        bg_color = (255, 0, 0)
+        mask_color = (1, 1, 1)
+        width = im.shape[1]
+        height = im.shape[0]
+        depth = 3
+        im_zero_mask = np.zeros(shape=(height, width, depth), dtype=np.uint8)
+        obj_box_masks = {}
         for obj_id, bb in bbs.items():
+
+            # Throw away those bbs that do not show one of the classes to display
+            if self.classes_to_display != []:
+                print("Only the object classes {} are allowed!".format(self.classes_to_display))
+                # IF the intersection of allowed classes and classe sof this object is zero, then skip to next object.
+                if (len(set(bb["classes"].keys()).intersection(self.classes_to_display)) == 0):
+                    print ("This object {} has no allowed class.".format(bb))
+                    continue
+
             bbox = bb["bbox"]
             ul = (bbox[0], bbox[1])
             lr = (bbox[2], bbox[3])
-            rect_color = (0, 0, 255)
-            font_color = (255, 255, 255)
-            im = cv2.rectangle(im, ul, lr, rect_color, 2)
-            bbox_text = []
-            bbox_text.append("{:s}".format("obj_" + str(obj_id)))
-            for cls in sorted(bb["classes"], key=bb["classes"].get):
-                scr = bb["classes"][cls]
-                bbox_text.append("{} -- {:.2f}".format(cls, scr))
-            font_height = 12
-            txt_ul = [ul[0], ul[1] - (len(bbox_text) * font_height)]
-            txt_ul[0] = max(txt_ul[0], 0)
-            txt_ul[1] = max(txt_ul[1], font_height)
-            for i, txt in enumerate(bbox_text):
-                line_ul = (txt_ul[0], txt_ul[1] + font_height * i)
-                im = cv2.putText(im, txt, line_ul, cv2.FONT_HERSHEY_SIMPLEX, 0.4, font_color, 1, cv2.LINE_AA)
+
+            # Generate object box masks
+            bbox_arr = np.array([[ul[0], ul[1]], [ul[0], lr[1]], [lr[0], lr[1]], [lr[0], ul[1]]], dtype=np.int32)
+            obj_box_masks[obj_id] = cv2.fillPoly(im_zero_mask, [bbox_arr], mask_color)
+
+            # Draw rectangle and write label if not masking objects
+            if not self.mask_objects:
+                # Rectangle
+                im = cv2.rectangle(im, ul, lr, rect_color, 2)
+                # Labels
+                bbox_text = []
+                bbox_text.append("{:s}".format("obj_" + str(obj_id)))
+                for cls in sorted(bb["classes"], key=bb["classes"].get):
+                    scr = bb["classes"][cls]
+                    bbox_text.append("{} -- {:.2f}".format(cls, scr))
+                font_height = 12
+                txt_ul = [ul[0], ul[1] - (len(bbox_text) * font_height)]
+                txt_ul[0] = max(txt_ul[0], 0)
+                txt_ul[1] = max(txt_ul[1], font_height)
+                for i, txt in enumerate(bbox_text):
+                    line_ul = (txt_ul[0], txt_ul[1] + font_height * i)
+                    im = cv2.putText(im, txt, line_ul, cv2.FONT_HERSHEY_SIMPLEX, 0.4, font_color, 1, cv2.LINE_AA)
+        if self.mask_objects:
+            full_mask = im_zero_mask
+            for ob_id, obm in obj_box_masks.items():
+                full_mask += obm
+            np.clip(full_mask, 0, 1, out=full_mask)
+            im *= full_mask
+
+            inverse_mask = (full_mask - 1) * (-1)
+            inverse_mask *= bg_color
+            inverse_mask = np.uint8(inverse_mask)
+            im += inverse_mask
+
+        # Write file to disk if self.write_to_file is set.
+        if self.write_to_file != '':
+            print("Writing image to {}".format(self.write_to_file))
+            cv2.imwrite(self.write_to_file, im)
 
         img_msg = self.cv_bridge.cv2_to_imgmsg(im, encoding="bgr8")
 
@@ -202,7 +273,7 @@ class Tracker:
 
         return bb_clusters_by_id
 
-    def __init__(self):
+    def __init__(self, mask_objects=False, classes_to_display=[], write_to_file=''):
         print("Initializing the Tracker")
         self.last_detected_bbs = {}
         self.last_detected_bb_clusters = {}
@@ -225,5 +296,9 @@ class Tracker:
         # image queue to assure that trackers are started with frames on which objectes were detected
         # self.sub_camera_raw_detection = rospy.Subscriber("/frcnn/bb_img", Image, self.cb_camera_raw, queue_size=10)
         self.bb_img_pub = rospy.Publisher('/frcnn/bb_img_tracking', Image, queue_size=10)
+        self.sub_bb = rospy.Subscriber("/frcnn/classes", String, self.cb_txt_interface, queue_size=10)
         self.last_img_timestamp = 0
+        self.mask_objects = mask_objects
+        self.classes_to_display = classes_to_display
+        self.write_to_file = write_to_file
         rospy.spin()

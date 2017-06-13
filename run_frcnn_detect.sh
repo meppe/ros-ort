@@ -23,7 +23,7 @@ if [ "$1" = "--gpu" ]; then
 	bash -c "cp -rn /py-faster-rcnn /opt/ros-ort/src/frcnn/src/ \
 				&& source '/opt/ros/kinetic/setup.bash' \
 				&& source '/opt/ros-ort/devel/setup.bash' \
-				&& python src/frcnn/scripts/run_detect.py --threshold 0.005 --model nico_vgg16"
+				&& python src/frcnn/scripts/run_detect.py --threshold 0.005 --model nico_zf"
 else
 	echo "Running docker with CPU"
 	docker run \

@@ -1,7 +1,7 @@
 import os
 import random
 
-def generate_test_train_val_split():
+def generate_train_val_test_split():
     train_val_test_split = [0.25, 0.25, 0.5]
     assert(sum(train_val_test_split) == 1.0)
     data_dir = '/storage/data/nico2017/nico2017'
@@ -21,21 +21,24 @@ def generate_test_train_val_split():
         test_samples = sorted(all_samples[-num_test:])
         trainval_samples = sorted(train_samples+val_samples)
 
-        f = open(image_sets_dir+'/Main/train.txt', "a")
+        f = open(image_sets_dir+'/Main/train.txt', "w")
         for sam in train_samples:
             f.write(str(sam).zfill(6)+'\n')
         f.close()
-        f = open(image_sets_dir + '/Main/val.txt', "a")
+        f = open(image_sets_dir + '/Main/val.txt', "w")
         for sam in val_samples:
             f.write(str(sam).zfill(6) + '\n')
         f.close()
-        f = open(image_sets_dir + '/Main/test.txt', "a")
+        f = open(image_sets_dir + '/Main/test.txt', "w")
         for sam in test_samples:
             f.write(str(sam).zfill(6) + '\n')
         f.close()
-        f = open(image_sets_dir + '/Main/trainval.txt', "a")
+        f = open(image_sets_dir + '/Main/trainval.txt', "w")
         for sam in trainval_samples:
             f.write(str(sam).zfill(6) + '\n')
         f.close()
-
+        f = open(image_sets_dir + '/Main/all.txt', "w")
+        for sam in all_samples:
+            f.write(str(sam).zfill(6) + '\n')
+        f.close()
         print("done")

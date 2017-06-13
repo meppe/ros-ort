@@ -175,6 +175,10 @@ class DlibTracker(Tracker):
             trackers_to_delete.add(t_to_del)
             del remaining_tracker_scores[t_to_del]
 
+
+
+
+        # Now delete all trackers
         for object_id in trackers_to_delete:
             if object_id not in self.trackers.keys():
                 print("Warning, trying to delete non-existing tracker for object {}. These are the objects for "
@@ -190,10 +194,6 @@ class DlibTracker(Tracker):
                 # time.sleep(0.01)
             else:
                 del self.tracker_info[object_id]
-
-
-
-
 
         # Now update current bbs
         self.current_bbs = {}
@@ -234,5 +234,6 @@ class DlibTracker(Tracker):
         self.max_trackers = 6
         self.tracker_alignment_running = False
         self.tracker_update_running = False
-        Tracker.__init__(self)
+        print ("Running tracker with arguments {}.".format(args))
+        Tracker.__init__(self, mask_objects=args.mask_objects, write_to_file=args.write_to_file, classes_to_display=[])
 

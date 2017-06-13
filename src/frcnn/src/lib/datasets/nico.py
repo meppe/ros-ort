@@ -24,8 +24,8 @@ class Nico(imdb):
     CLASSES = ('__background__',  # always index 0
                 'banana', 'eggplant', 'apple', 'tomato', 'fish', 'pepper', 'lemon', 'die',
                 'long', 'round', 'squared',
-                'yellow', 'purple', 'green', 'red', 'gray',
-               'none1', 'none2', 'none3', 'none4')
+                'yellow', 'purple', 'green', 'red', 'gray', 'white', 'orange',
+                'none3', 'none4')
 
     def __init__(self, image_set, year, devkit_path=None):
         imdb.__init__(self, 'nico_' + year + '_' + image_set)
@@ -206,8 +206,6 @@ class Nico(imdb):
 
         # Load object bounding boxes into a data frame.
         ix = 0
-        if index == "000567":
-            print("hello")
         for indx, obj in enumerate(objs):
             bbox = obj.find('bndbox')
             # Make pixel indexes 0-based
