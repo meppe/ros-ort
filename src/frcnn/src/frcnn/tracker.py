@@ -133,13 +133,22 @@ class Tracker:
 
         obj_boxes_mask = np.zeros(shape=(height, width, depth), dtype=np.uint8)
         for obj_id, bb in bbs.items():
-            # Throw away those bbs that do not show one of the classes to display
-            if self.classes_to_display != []:
-                print("Only the object classes {} are allowed!".format(self.classes_to_display))
-                # IF the intersection of allowed classes and classe sof this object is zero, then skip to next object.
-                if (len(set(bb["classes"].keys()).intersection(self.classes_to_display)) == 0):
-                    print ("This object {} has no allowed class.".format(bb))
-                    continue
+
+            # Throw away those classes with a low score and
+            # throw away those bbs that do not show one of the classes to display
+            bb_orig = bb
+            for cls in sorted(bb["classes"], key=bb["classes"].get, reverse=True):
+                scr = float(bb["classes"][cls])
+                if scr < self.class_threshold:
+                    del bb_orig["classes"][cls]
+                if self.classes_to_display != [] and cls not in self.classes_to_display:
+                    del bb_orig["classes"][cls]
+            bb = bb_orig
+
+            # Throw away those bbs with a low score (the total score without removing classes)
+            if bb["score"] < self.cum_threshold:
+                print("score {} too low".format(bb["score"]))
+                continue
 
             bbox = bb["bbox"]
             ul = (bbox[0], bbox[1])
@@ -155,11 +164,8 @@ class Tracker:
                 im = cv2.rectangle(im, ul, lr, rect_color, 2)
                 # Labels
                 bbox_text = []
-                bbox_text.append("{:s}".format("obj_" + str(obj_id)))
-                # print bb
+                bbox_text.append("{:s} -- {}".format("obj_" + str(obj_id), bb["score"]))
                 for cls in sorted(bb["classes"], key=bb["classes"].get, reverse=True):
-                    if self.classes_to_display != [] and cls not in self.classes_to_display:
-                        continue
                     scr = bb["classes"][cls]
                     bbox_text.append("{} -- {:.2f}".format(cls, scr))
                 font_height = 12

@@ -44,8 +44,10 @@ class DlibTracker(Tracker):
 
     # @profile
     def align_detections_and_trackers(self, bbs):
+        # This is called when a new bounding box has been received.
+        # First, assure that update is not running so that we don't have variable writing problems.
         while (self.tracker_update_running):
-            time.sleep(0.001)
+            time.sleep(0.01)
 
         bb_timestamp = self.last_detected_bb_timestamp
         closest_timestamp = None
@@ -100,8 +102,10 @@ class DlibTracker(Tracker):
                 if max_iou > self.iou_threshold:
                     is_new_object = False
                     if cls not in tracker_info[obj_id]["classes"].keys():
+                        # Add a new class
                         tracker_info[obj_id]["classes"][cls] = score
                     else:
+                        # Add score to existing class
                         tracker_info[obj_id]["classes"][cls] += score
                     tracker_info[obj_id]["timestamp"] = bb_timestamp
                     totalscore = sum(tracker_info[obj_id]["classes"].values())
@@ -110,7 +114,8 @@ class DlibTracker(Tracker):
                     old_weighted_coords = np.asarray(tracker_info[obj_id]["bbox"]) * old_score
                     new_weighted_coords = np.asarray(bbox) * score
                     tracker_info[obj_id]["bbox"] = ((old_weighted_coords + new_weighted_coords) / totalscore).tolist()
-                    tracker_info[obj_id]["bbox"] = [int(coord) for coord in tracker_info[obj_id]["bbox"]]
+                    # tracker_info[obj_id]["bbox"] = bbox
+                    tracker_info[obj_id]["bbox"] = [int(round(coord,0)) for coord in tracker_info[obj_id]["bbox"]]
                     updated_trackers.append(obj_id)
             if is_new_object:
                 obj_id = self.tracker_count
@@ -154,40 +159,40 @@ class DlibTracker(Tracker):
 
     # @profile
     def update_trackers(self, img, timestamp):
+        # This is called when a new frame has been received.
         while (self.tracker_alignment_running):
-            time.sleep(0.001)
+            time.sleep(0.01)
         self.tracker_update_running = True
 
         # First, mark all trackers that have a low total score for deletion.
-        remaining_tracker_scores = {}
+        tracker_scores = {}
         trackers_to_delete = set()
         num_trackers = len(self.tracker_info.keys())
         for object_id in self.tracker_info.keys():
+            totalscore = sum(self.tracker_info[object_id]["classes"].values())
+            tracker_scores[object_id] = totalscore
+            # TODO: Remove this. This is not easy, because when I just delete it then there are mutex problems between update_trackers and align_trackers.
             cls_to_del = []
             for cls in self.tracker_info[object_id]["classes"]:
                 if self.tracker_info[object_id]["classes"][cls] < self.class_threshold:
                     cls_to_del.append(cls)
             for cls in cls_to_del:
                 del self.tracker_info[object_id]["classes"][cls]
-            totalscore = sum(self.tracker_info[object_id]["classes"].values())
             if totalscore < self.cum_threshold:
                 print("Tracker for object {} has a low score of {}. It will be removed.".format(
                     str(object_id), str(totalscore)))
                 trackers_to_delete.add(object_id)
-            else:
-                remaining_tracker_scores[object_id] = totalscore
+            # else:
+            #     remaining_tracker_scores[object_id] = totalscore
 
         # If there are too many trackers, mark those with the lowest score for deletion.
         while num_trackers - len(trackers_to_delete) > self.max_trackers:
-            t_to_del = min(remaining_tracker_scores, key=remaining_tracker_scores.get)
+            t_to_del = min(tracker_scores, key=tracker_scores.get)
             print("Too many trackers running, only {} allowed. Deleting tracker for object {}, "
                   "because it has the lowest score.".format(
                     str(self.max_trackers), str(t_to_del)))
             trackers_to_delete.add(t_to_del)
-            del remaining_tracker_scores[t_to_del]
-
-
-
+            del tracker_scores[t_to_del]
 
         # Now delete all trackers
         for object_id in trackers_to_delete:
@@ -214,8 +219,10 @@ class DlibTracker(Tracker):
             bbox = [bb.left(), bb.top(), bb.right(), bb.bottom()]
             bbox = [int(coord) for coord in bbox]
             classes = self.tracker_info[object_id]["classes"]
-            cls = max(classes, key=classes.get)
-            score = classes[cls]
+            # cls = max(classes, key=classes.get)
+            # score = classes[cls]
+            # print classes
+            score = sum(classes.values())
             self.tracker_info[object_id]["bb"] = bbox
             # Apply totalscore decay, so that new matched detections have a higher impact on the position of the bbox
             # in align_detections_and_trackers function.
@@ -228,7 +235,7 @@ class DlibTracker(Tracker):
             self.current_bbs[object_id]["bbox"] = bbox
             self.current_bbs[object_id]["score"] = score
             self.current_bbs[object_id]["timestamp"] = timestamp
-            self.current_bbs[object_id]["class"] = cls
+            # self.current_bbs[object_id]["class"] = cls
             self.current_bbs[object_id]["classes"] = classes
         self.tracker_info_history[timestamp] = self.tracker_info
         self.tracker_update_running = False
@@ -241,7 +248,7 @@ class DlibTracker(Tracker):
         self.cum_threshold = args.cum_threshold
         self.class_threshold = args.class_threshold
         self.total_score_decay = 1.1
-        # The higher the numbers the more bounding boxes there are.
+        # Distance threshold to start a new tracker. The higher the number the more bounding boxes there are.
         self.iou_threshold = 0.3
         self.max_trackers = args.max_trackers
         self.tracker_alignment_running = False

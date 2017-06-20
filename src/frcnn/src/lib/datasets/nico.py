@@ -29,8 +29,12 @@ class Nico(imdb):
 
     # This defines the factor by which scores for objects of a specific class are multiplied to achieve an equal
     # distribution of predicted annotations for the different object properties.
+    # CLASS_PROPERTIES = {'classes': (1, ['banana', 'eggplant', 'apple', 'tomato', 'fish', 'pepper', 'lemon', 'die']),
+    #                     'shapes': (350, ['long', 'round', 'squared']),
+    #                     'colors': (50, ['yellow', 'purple', 'green', 'red', 'gray', 'white', 'orange']),
+    #                     'none': (0, ['__background__', 'none3', 'none_4'])}
     CLASS_PROPERTIES = {'classes': (1, ['banana', 'eggplant', 'apple', 'tomato', 'fish', 'pepper', 'lemon', 'die']),
-                        'shapes': (350, ['long', 'round', 'squared']),
+                        'shapes': (50, ['long', 'round', 'squared']),
                         'colors': (50, ['yellow', 'purple', 'green', 'red', 'gray', 'white', 'orange']),
                         'none': (0, ['__background__', 'none3', 'none_4'])}
 

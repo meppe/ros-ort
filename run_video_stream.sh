@@ -30,7 +30,7 @@ meppe78/ros-kinetic-video-stream \
             visualize:=false \
             video_stream_provider:="$filepath" \
             camera_name:=frcnn_input \
-            fps:=5"
+            fps:=10"
 
 # Play a bag file
 # bash -c "source '/opt/ros/kinetic/setup.bash' && source '/opt/ros-ort/devel/setup.bash' && \
