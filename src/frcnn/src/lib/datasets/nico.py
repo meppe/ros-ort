@@ -27,6 +27,13 @@ class Nico(imdb):
                 'yellow', 'purple', 'green', 'red', 'gray', 'white', 'orange',
                 'none3', 'none4')
 
+    # This defines the factor by which scores for objects of a specific class are multiplied to achieve an equal
+    # distribution of predicted annotations for the different object properties.
+    CLASS_PROPERTIES = {'classes': (1, ['banana', 'eggplant', 'apple', 'tomato', 'fish', 'pepper', 'lemon', 'die']),
+                        'shapes': (350, ['long', 'round', 'squared']),
+                        'colors': (50, ['yellow', 'purple', 'green', 'red', 'gray', 'white', 'orange']),
+                        'none': (0, ['__background__', 'none3', 'none_4'])}
+
     def __init__(self, image_set, year, devkit_path=None):
         imdb.__init__(self, 'nico_' + year + '_' + image_set)
         self._year = year

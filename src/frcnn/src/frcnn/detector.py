@@ -21,19 +21,12 @@ import caffe
 from threading import Thread
 import os
 
-# NMS_THRESH = 0.1
-CONF_THRESH = 0.2
 
 class Detector:
     DETECT_RUNNING = False
 
-    def __init__(self, classes, prototxt_file, caffemodel_file, args):
+    def __init__(self, classes, prototxt_file, caffemodel_file, args, class_properties=None):
 
-        # self.models = models
-        # model_net = args.model.split("--")
-        # model = model_net[0]
-        # net = model_net[1]
-        # model_info = self.models[model]
         self.classes = classes
         self.current_scores = []
         self.current_boxes = []
@@ -43,26 +36,20 @@ class Detector:
         self.frames_detected = 0
         self.detection_start = time.time()
         self.args = args
-        # The first frame's header secs timestamp.
-        # self.start_secs = 0
-
         self.CONF_THRESH = args.conf_threshold
+
+        # print ("THRESH" + str(self.CONF_THRESH))
+
+        self.cls_score_factors = {}
+        self.set_cls_score_factors(class_properties)
 
         rospy.init_node("frcnn_detector")
         print("node initialized")
         cfg.TEST.HAS_RPN = True  # Use RPN for proposals
 
-        # models_dir = "models/" + self.models[model][0]
-        # model_net_dir = self.models[model][4][net][0]
-        # model_subdir = self.models[model][1]
-        # model_pt_file = self.models[model][2]
-        # frcnn_path = os.getcwd() + "/src/frcnn/src/py-faster-rcnn"
-        # prototxt = os.path.join(frcnn_path, models_dir, model_net_dir,
-        #                         model_subdir, model_pt_file)
         prototxt = prototxt_file
-
-        # caffemodel = os.path.join(frcnn_path, 'data', self.models[model][4][net][1])
         caffemodel = caffemodel_file
+
         if not os.path.isfile(caffemodel):
             raise IOError(('{:s} not found.\nDid you run ./data/script/'
                            'fetch_faster_rcnn_models.sh?').format(caffemodel))
@@ -95,6 +82,14 @@ class Detector:
         self.sub_frames = rospy.Subscriber("/frcnn_input/image_raw", Image, self.cb_frame_rec, queue_size=10)
         rospy.spin()
 
+    def set_cls_score_factors(self, class_properties):
+        if class_properties == None:
+            return
+        for prop in class_properties.keys():
+            score_factor = class_properties[prop][0]
+            for cls in class_properties[prop][1]:
+                self.cls_score_factors[cls] = float(score_factor)
+
     def pub_detections(self):
         is_keyframe = False
         time = self.current_frame_header.stamp
@@ -117,10 +112,15 @@ class Detector:
             cls_scores = self.current_scores[:, cls_ind]
             for i, b in enumerate(cls_boxes):
                 score = cls_scores[i]
+                if cls in self.cls_score_factors.keys():
+                    cls_score_factor = self.cls_score_factors[cls]
+                    score *= cls_score_factor
                 max_score = max(max_score, score)
                 # print max_score
-                if score < CONF_THRESH:
+                # print cls, score, str(self.CONF_THRESH)
+                if float(score) < float(self.CONF_THRESH):
                     continue
+                # raw_input()
                 b_ul_x = b[0]
                 b_ul_y = b[1]
                 b_lr_x = b[2]

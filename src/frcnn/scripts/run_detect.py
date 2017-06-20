@@ -33,6 +33,7 @@ from lib.datasets.pascal_voc import pascal_voc
 
 
 CLASSES_NICO = Nico.CLASSES
+CLASS_PROPERTIES_NICO = Nico.CLASS_PROPERTIES
 
 CLASSES_PASCAL = pascal_voc.CLASSES
 
@@ -74,11 +75,11 @@ MODELS = {
           'nico_zf': (
                    'src/frcnn/src/output/faster_rcnn_end2end/nico_2017_trainval/zf_faster_rcnn_iter_30000.caffemodel',
                    'src/frcnn/src/models/nico/ZF/faster_rcnn_end2end/test.prototxt',
-                   CLASSES_NICO),
+                   CLASSES_NICO, CLASS_PROPERTIES_NICO),
           'nico_vgg16': (
                    'src/frcnn/src/output/faster_rcnn_end2end/nico_2017_trainval/vgg16_faster_rcnn_iter_70000.caffemodel',
                    'src/frcnn/src/models/nico/VGG16/faster_rcnn_end2end/test.prototxt',
-                   CLASSES_NICO),
+                   CLASSES_NICO, CLASS_PROPERTIES_NICO),
           }
 
 # BASE_DIR = "/opt/ros-ort"
@@ -94,7 +95,7 @@ def parse_args():
                         action='store_true')
 
     parser.add_argument('--threshold', dest='conf_threshold',
-                        help='The confidence threshold to detect an object', default=0.4)
+                        help='The confidence threshold to detect an object', default=0.4, type=float)
     
 
     poss_models = []
@@ -114,5 +115,6 @@ if __name__ == '__main__':
     caffemodel_file = MODELS[model][0]
     prototxt_file = MODELS[model][1]
     classes = MODELS[model][2]
-
-    detector = Detector(classes, prototxt_file, caffemodel_file, args)
+    if len(MODELS[model]) == 4:
+        class_properties = MODELS[model][3]
+    detector = Detector(classes, prototxt_file, caffemodel_file, args, class_properties=class_properties)

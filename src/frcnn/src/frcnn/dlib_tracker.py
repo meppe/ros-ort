@@ -119,7 +119,8 @@ class DlibTracker(Tracker):
                                             "timestamp": bb_timestamp, "classes": {cls: score}}
                 updated_trackers.append(obj_id)
 
-        #Restart those trackers that have been realigned with new detections and track the frames between BB detectio and last frame.
+        # Restart those trackers that have been realigned with new detections and track the frames between BB detection
+        # and last frame.
         for object_id, t in self.tracker_info.items():
             if object_id not in updated_trackers:
                 continue
@@ -164,12 +165,12 @@ class DlibTracker(Tracker):
         for object_id in self.tracker_info.keys():
             cls_to_del = []
             for cls in self.tracker_info[object_id]["classes"]:
-                if self.tracker_info[object_id]["classes"][cls] < self.class_score_threshold:
+                if self.tracker_info[object_id]["classes"][cls] < self.class_threshold:
                     cls_to_del.append(cls)
             for cls in cls_to_del:
                 del self.tracker_info[object_id]["classes"][cls]
             totalscore = sum(self.tracker_info[object_id]["classes"].values())
-            if totalscore < self.total_score_threshold:
+            if totalscore < self.cum_threshold:
                 print("Tracker for object {} has a low score of {}. It will be removed.".format(
                     str(object_id), str(totalscore)))
                 trackers_to_delete.add(object_id)
@@ -237,12 +238,12 @@ class DlibTracker(Tracker):
         self.tracker_info = {}
         self.tracker_count = 0
         self.bbs_received = 0
-        self.total_score_threshold = args.cum_threshold
-        self.class_score_threshold = args.class_threshold
+        self.cum_threshold = args.cum_threshold
+        self.class_threshold = args.class_threshold
         self.total_score_decay = 1.1
         # The higher the numbers the more bounding boxes there are.
         self.iou_threshold = 0.3
-        self.max_trackers = 8
+        self.max_trackers = args.max_trackers
         self.tracker_alignment_running = False
         self.tracker_update_running = False
         print ("Running tracker with arguments {}.".format(args))
