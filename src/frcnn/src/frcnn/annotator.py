@@ -213,16 +213,19 @@ class Annotator:
         # print("3")
         # print("Opening drawing window...")
         # time.sleep(0.5)
+        counter = 0
         while True:
             # display the image
             cv2.imshow(wName, rectI.image)
             key = cv2.waitKey(1) & 0xFF
-            # print("key: {}".format(key))
+            # key = cv2.waitKey(0)
+            print("key: {}".format(key))
             # if returnflag is True, break from the loop
             if rectI.returnflag == True:
                 # print("returnflag")
                 break
-            # print("4")
+            print(counter)
+            counter += 1
         # rectI.returnflag == False
 
         # print "Dragged rectangle coordinates"

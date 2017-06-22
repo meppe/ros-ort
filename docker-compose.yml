@@ -1,26 +1,95 @@
 version: '2'
 
 services:
+  
+  ################
+  #   ANNOTATE   #
+  ################
+  # Unfortunately this does not fully work. It does work when starting with pycharm though
+  annotate:
+    image: meppe78/ros-kinetic-image-view
+    volumes:
+     - ./src/frcnn:/opt/ros-ort/src/frcnn
+     - /tmp/.X11-unix:/tmp/.X11-unix
+     - ./src/frcnn/src/py-faster-rcnn:/opt/ros-ort/src/frcnn/src/py-faster-rcnn
+     - /storage/data:/storage/data
+    working_dir: /opt/ros-ort
+    container_name: ros_frcnn_training
+    command: [
+              "/usr/bin/python src/frcnn/scripts/run_annotate.py --qt-support"
+              ]
+    environment:
+      - DISPLAY=:0
+      - QT_X11_NO_MITSHM=1
+
+  #################
+  #   DETECT_DEMO #
+  #################
+  # Unfortunately this does not fully work. It does work when starting with pycharm though
+  detect_demo_gpu:
+    image: meppe78/ros-kinetic-frcnn-training
+    environment:
+      - DISPLAY=:0
+      - ROS_MASTER_URI=http://roscore_kinetic:11311
+      - QT_X11_NO_MITSHM=1
+    volumes:
+     - ./src/frcnn:/opt/ros-ort/src/frcnn
+     - ./src/ort_msgs:/opt/ros-ort/src/ort_msgs
+     - ./output:/opt/ros-ort/output
+     - ./src/frcnn/src/py-faster-rcnn:/opt/ros-ort/src/frcnn/src/py-faster-rcnn
+     - /storage/data:/storage/data
+     - .:/opt/ros-ort
+     - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    working_dir: /opt/ros-ort
+    container_name: ros_frcnn_demo
+    command: [
+              "/usr/bin/python src/frcnn/scripts/run_detection_demo.py --set DATA_DIR /storage/data"
+              ]
+    entrypoint: /train_entrypoint.sh
+
+  detect_demo_cpu:
+    image: meppe78/ros-kinetic-frcnn-training
+        environment:
+      - DISPLAY=:0
+      - ROS_MASTER_URI=http://roscore_kinetic:11311
+      - QT_X11_NO_MITSHM=1
+    volumes:
+     - ./src/frcnn:/opt/ros-ort/src/frcnn
+     - ./src/ort_msgs:/opt/ros-ort/src/ort_msgs
+     - ./output:/opt/ros-ort/output
+     - ./src/frcnn/src/py-faster-rcnn:/opt/ros-ort/src/frcnn/src/py-faster-rcnn
+     - /storage/data:/storage/data
+     - .:/opt/ros-ort
+     - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    working_dir: /opt/ros-ort
+    container_name: ros_frcnn_demo
+    command: [
+              "/usr/bin/python src/frcnn/scripts/run_detection_demo.py --cpu --set DATA_DIR /storage/data"
+              ]
+    entrypoint: /train_entrypoint.sh
+
   #############
   #   TRAIN   #
   #############
-  # training:
-  #   environment:
-  #     - DISPLAY=:0
-  #     - ROS_MASTER_URI=http://roscore_kinetic:11311
-  #     - QT_X11_NO_MITSHM=1
-  #   image: meppe78/ros-kinetic-frcnn-training
-  #   build: .
-  #   volumes:
-  #    - .:/opt/ros-ort
-  #    - /storage/data:/storage/data
-  #    - /tmp/.X11-unix:/tmp/.X11-unix:rw
-  #    working_dir: /opt/ros-ort
-  #   container_name: ros_frcnn_training
-  #   command: ["cp -rn /py-faster-rcnn /opt/ros-ort/src/frcnn/src/", "python src/frcnn/scripts/run_training.py --set DATA_DIR /storage/data"]
-  #   entrypoint: /dummy_entrypoint.sh
-  #   networks:
-  #     - default
+  training:
+    image: meppe78/ros-kinetic-frcnn-training
+    volumes:
+     - ./src/frcnn:/opt/ros-ort/src/frcnn
+     - ./src/ort_msgs:/opt/ros-ort/src/ort_msgs
+     - ./output:/opt/ros-ort/output
+     - ./src/frcnn/src/py-faster-rcnn:/opt/ros-ort/src/frcnn/src/py-faster-rcnn
+     - /storage/data:/storage/data
+     - .:/opt/ros-ort
+    working_dir: /opt/ros-ort
+    container_name: ros_frcnn_training
+    command: [
+              "/usr/bin/python src/frcnn/scripts/run_training.py --set DATA_DIR /storage/data"
+              ]
+    entrypoint: /train_entrypoint.sh
+    links: 
+      - roscore_kinetic
+    networks:
+      - default
 
   ############
   #   CORE   #
@@ -31,6 +100,7 @@ services:
     command: ["roscore"]
     networks:
       - default
+
 
   ################
   # VIDEO STREAM #
@@ -59,6 +129,7 @@ services:
     networks:
       - default
 
+
   ############
   # TRACKING #
   ############
@@ -83,6 +154,7 @@ services:
       - roscore_kinetic
     networks:
       - default
+
 
   #############
   # DETECTION #
@@ -127,10 +199,7 @@ services:
     working_dir: /opt/ros-ort
     container_name: ros_frcnn_detect
     command: [
-              # "bash"
-              # "source /opt/ros/kinetic/setup.bash", 
-              # "source /opt/ros-ort/devel/setup.bash", 
-              "/usr/bin/python src/frcnn/scripts/run_detect.py --threshold 0.1 --model nico_zf --cpu"
+              "/usr/bin/python src/frcnn/scripts/run_detect.py --threshold 0.1 --model nico_zf"
               ]
     entrypoint: /frcnn_entrypoint.sh
     links: 
@@ -157,6 +226,7 @@ services:
       - roscore_kinetic
     networks:
       - default
+
 
   ##############
   # VIDEO VIEW #
