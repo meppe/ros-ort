@@ -73,7 +73,7 @@ MODELS = {
                      'src/frcnn/src/models/pascal_voc/ZF/faster_rcnn_end2end/test.prototxt',
                      CLASSES_PASCAL),
           'nico_zf': (
-                   'src/frcnn/src/output/faster_rcnn_end2end/nico_2017_trainval/zf_faster_rcnn_iter_30000.caffemodel',
+                   'src/frcnn/src/output/faster_rcnn_end2end/nico_2017_trainval/zf_faster_rcnn_iter_70000.caffemodel',
                    'src/frcnn/src/models/nico/ZF/faster_rcnn_end2end/test.prototxt',
                    CLASSES_NICO, CLASS_PROPERTIES_NICO),
           'nico_vgg16': (

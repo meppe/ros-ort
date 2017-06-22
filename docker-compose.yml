@@ -1,0 +1,183 @@
+version: '2'
+
+services:
+  #############
+  #   TRAIN   #
+  #############
+  # training:
+  #   environment:
+  #     - DISPLAY=:0
+  #     - ROS_MASTER_URI=http://roscore_kinetic:11311
+  #     - QT_X11_NO_MITSHM=1
+  #   image: meppe78/ros-kinetic-frcnn-training
+  #   build: .
+  #   volumes:
+  #    - .:/opt/ros-ort
+  #    - /storage/data:/storage/data
+  #    - /tmp/.X11-unix:/tmp/.X11-unix:rw
+  #    working_dir: /opt/ros-ort
+  #   container_name: ros_frcnn_training
+  #   command: ["cp -rn /py-faster-rcnn /opt/ros-ort/src/frcnn/src/", "python src/frcnn/scripts/run_training.py --set DATA_DIR /storage/data"]
+  #   entrypoint: /dummy_entrypoint.sh
+  #   networks:
+  #     - default
+
+  ############
+  #   CORE   #
+  ############
+  roscore_kinetic:
+    image: meppe78/ros-core-kinetic
+    container_name: roscore_kinetic
+    command: ["roscore"]
+    networks:
+      - default
+
+  ################
+  # VIDEO STREAM #
+  ################
+  video_stream:
+    environment:
+      - DISPLAY=:0
+      - ROS_MASTER_URI=http://roscore_kinetic:11311
+      - QT_X11_NO_MITSHM=1
+    devices:
+      - /dev/video0
+    image: meppe78/ros-kinetic-video-stream
+    build: .
+    volumes:
+     - ./src/ort_msgs:/opt/ros-ort/src/ort_msgs
+     - /tmp/.X11-unix:/tmp/.X11-unix:rw
+     - ./video_data:/opt/ros-ort/video_data
+     - ./src/video_stream_opencv:/opt/ros-ort/src/video_stream_opencv
+     - ./src/ros-ort/launch:/opt/ros-ort/src/ros-ort/launch
+
+    working_dir: /opt/ros-ort
+    container_name: ros_video_stream
+    command: ["roslaunch src/video_stream_opencv/launch/camera.launch visualize:=false camera_name:=frcnn_input fps:=1 video_stream_provider:=${ROS_ORT_VIDEO}"]
+    links: 
+      - roscore_kinetic
+    networks:
+      - default
+
+  ############
+  # TRACKING #
+  ############
+  tracking:
+    environment:
+      - DISPLAY=:0
+      - ROS_MASTER_URI=http://roscore_kinetic:11311
+      - QT_X11_NO_MITSHM=1
+    image: meppe78/ros-kinetic-frcnn-tracker
+    build: .
+    volumes:
+     - ./src/frcnn:/opt/ros-ort/src/frcnn
+     - ./src/ort_msgs:/opt/ros-ort/src/ort_msgs
+     - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    working_dir: /opt/ros-ort
+    container_name: ros_frcnn_tracking
+    command: [
+              "/usr/bin/python src/frcnn/scripts/run_dlib_tracker.py --cum_threshold 2.5 --class_threshold 1.1 --max_trackers 5"
+              ]
+    entrypoint: /frcnn_entrypoint.sh
+    links: 
+      - roscore_kinetic
+    networks:
+      - default
+
+  #############
+  # DETECTION #
+  #############
+  detection_cpu:
+    environment:
+      - DISPLAY=:0
+      - ROS_MASTER_URI=http://roscore_kinetic:11311
+      - QT_X11_NO_MITSHM=1
+    image: meppe78/ros-kinetic-frcnn
+    build: .
+    volumes:
+     - ./src/frcnn:/opt/ros-ort/src/frcnn
+     - ./src/ort_msgs:/opt/ros-ort/src/ort_msgs
+     - ./src/frcnn/src/py-faster-rcnn:/opt/ros-ort/src/frcnn/src/py-faster-rcnn
+     - ./output:/opt/ros-ort/output
+     - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    working_dir: /opt/ros-ort
+    container_name: ros_frcnn_detect
+    command: [
+              "/usr/bin/python src/frcnn/scripts/run_detect.py --threshold 0.1 --model nico_zf --cpu"
+              ]
+    entrypoint: /frcnn_entrypoint.sh
+    links: 
+      - roscore_kinetic
+    networks:
+      - default
+
+  detection_gpu:
+    environment:
+      - DISPLAY=:0
+      - ROS_MASTER_URI=http://roscore_kinetic:11311
+      - QT_X11_NO_MITSHM=1
+    image: meppe78/ros-kinetic-frcnn
+    build: .
+    volumes:
+     - ./src/frcnn:/opt/ros-ort/src/frcnn
+     - ./src/ort_msgs:/opt/ros-ort/src/ort_msgs
+     - ./src/frcnn/src/py-faster-rcnn:/opt/ros-ort/src/frcnn/src/py-faster-rcnn
+     - ./output:/opt/ros-ort/output
+     - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    working_dir: /opt/ros-ort
+    container_name: ros_frcnn_detect
+    command: [
+              # "bash"
+              # "source /opt/ros/kinetic/setup.bash", 
+              # "source /opt/ros-ort/devel/setup.bash", 
+              "/usr/bin/python src/frcnn/scripts/run_detect.py --threshold 0.1 --model nico_zf --cpu"
+              ]
+    entrypoint: /frcnn_entrypoint.sh
+    links: 
+      - roscore_kinetic
+    networks:
+      - default
+
+
+  #######################
+  # VIDEO TRACKING VIEW #
+  #######################
+  tracking_view:
+    environment:
+      - DISPLAY=:0
+      - ROS_MASTER_URI=http://roscore_kinetic:11311
+      - QT_X11_NO_MITSHM=1
+    image: meppe78/ros-kinetic-image-view
+    volumes:
+     - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    working_dir: /opt/ros-ort
+    container_name: ros_video_stream
+    command: ["rosrun image_view image_view image:=/frcnn/bb_img_tracking"]
+    links: 
+      - roscore_kinetic
+    networks:
+      - default
+
+  ##############
+  # VIDEO VIEW #
+  ##############
+  video_view:
+    environment:
+      - DISPLAY=:0
+      - ROS_MASTER_URI=http://roscore_kinetic:11311
+      - QT_X11_NO_MITSHM=1
+    image: meppe78/ros-kinetic-image-view
+    volumes:
+     - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    working_dir: /opt/ros-ort
+    container_name: ros_video_tracking_view
+    command: ["rosrun image_view image_view image:=/frcnn_input/image_raw"]
+    links: 
+      - roscore_kinetic
+    networks:
+      - default
+
+
+networks:
+    default:
+      driver: bridge

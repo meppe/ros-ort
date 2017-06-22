@@ -44,7 +44,12 @@ class DlibTracker(Tracker):
 
     # @profile
     def align_detections_and_trackers(self, bbs):
-        # This is called when a new bounding box has been received.
+        '''
+        This is called when a new bounding box has been received.
+        :param bbs:
+        :return:
+        '''
+
         # First, assure that update is not running so that we don't have variable writing problems.
         while (self.tracker_update_running):
             time.sleep(0.01)
@@ -159,7 +164,12 @@ class DlibTracker(Tracker):
 
     # @profile
     def update_trackers(self, img, timestamp):
-        # This is called when a new frame has been received.
+        '''
+        This is called when a new frame has been received.
+        :param img:
+        :param timestamp:
+        :return:
+        '''
         while (self.tracker_alignment_running):
             time.sleep(0.01)
         self.tracker_update_running = True
@@ -171,17 +181,17 @@ class DlibTracker(Tracker):
         for object_id in self.tracker_info.keys():
             totalscore = sum(self.tracker_info[object_id]["classes"].values())
             tracker_scores[object_id] = totalscore
-            # TODO: Remove this. This is not easy, because when I just delete it then there are mutex problems between update_trackers and align_trackers.
-            cls_to_del = []
-            for cls in self.tracker_info[object_id]["classes"]:
-                if self.tracker_info[object_id]["classes"][cls] < self.class_threshold:
-                    cls_to_del.append(cls)
-            for cls in cls_to_del:
-                del self.tracker_info[object_id]["classes"][cls]
-            if totalscore < self.cum_threshold:
-                print("Tracker for object {} has a low score of {}. It will be removed.".format(
-                    str(object_id), str(totalscore)))
-                trackers_to_delete.add(object_id)
+            # TODO: Remove this... Trackers shoudl only be removed if there are too many. However, when I just delete this, then there are mutex problems between update_trackers and align_trackers.
+            # cls_to_del = []
+            # for cls in self.tracker_info[object_id]["classes"]:
+            #     if self.tracker_info[object_id]["classes"][cls] < self.class_threshold:
+            #         cls_to_del.append(cls)
+            # for cls in cls_to_del:
+            #     del self.tracker_info[object_id]["classes"][cls]
+            # if totalscore < self.cum_threshold:
+            #     print("Tracker for object {} has a low score of {}. It will be removed.".format(
+            #         str(object_id), str(totalscore)))
+            #     trackers_to_delete.add(object_id)
             # else:
             #     remaining_tracker_scores[object_id] = totalscore
 
@@ -194,22 +204,25 @@ class DlibTracker(Tracker):
             trackers_to_delete.add(t_to_del)
             del tracker_scores[t_to_del]
 
-        # Now delete all trackers
+        # Now delete all trackers to delete
         for object_id in trackers_to_delete:
-            if object_id not in self.trackers.keys():
-                print("Warning, trying to delete non-existing tracker for object {}. These are the objects for "
-                      "which trackers exist:".format(object_id))
-                print(self.trackers.keys())
-                # time.sleep(0.01)
-            else:
-                del self.trackers[object_id]
-            if object_id not in self.tracker_info.keys():
-                print("Warning, trying to delete non-existing tracker_info for object {}. These are the objects "
-                      "for which tracke_infos exist:".format(object_id))
-                print(self.tracker_info.keys())
-                # time.sleep(0.01)
-            else:
-                del self.tracker_info[object_id]
+            assert(object_id in self.trackers.keys()), "Object id not in trackers list"
+            del self.trackers[object_id]
+            assert(object_id in self.tracker_info.keys()), "Object id not in tracker_info list"
+            del self.tracker_info[object_id]
+
+            # if object_id not in self.trackers.keys():
+            #     print("Warning, trying to delete non-existing tracker for object {}. These are the objects for "
+            #           "which trackers exist:".format(object_id))
+            #     print(self.trackers.keys())
+            # else:
+            #     del self.trackers[object_id]
+            # if object_id not in self.tracker_info.keys():
+            #     print("Warning, trying to delete non-existing tracker_info for object {}. These are the objects "
+            #           "for which tracke_infos exist:".format(object_id))
+            #     print(self.tracker_info.keys())
+            # else:
+            #     del self.tracker_info[object_id]
 
         # Now update current bbs
         self.current_bbs = {}
@@ -219,15 +232,12 @@ class DlibTracker(Tracker):
             bbox = [bb.left(), bb.top(), bb.right(), bb.bottom()]
             bbox = [int(coord) for coord in bbox]
             classes = self.tracker_info[object_id]["classes"]
-            # cls = max(classes, key=classes.get)
-            # score = classes[cls]
-            # print classes
-            score = sum(classes.values())
             self.tracker_info[object_id]["bb"] = bbox
             # Apply totalscore decay, so that new matched detections have a higher impact on the position of the bbox
             # in align_detections_and_trackers function.
             for cls in self.tracker_info[object_id]["classes"]:
                 self.tracker_info[object_id]["classes"][cls] /= self.total_score_decay
+            score = sum(classes.values())
             # Update current_bbs. This is the dict that is being visualized through parent class Tracker.
             # if object_id not in self.current_bbs.keys():
             self.current_bbs[object_id] = {}
@@ -235,7 +245,6 @@ class DlibTracker(Tracker):
             self.current_bbs[object_id]["bbox"] = bbox
             self.current_bbs[object_id]["score"] = score
             self.current_bbs[object_id]["timestamp"] = timestamp
-            # self.current_bbs[object_id]["class"] = cls
             self.current_bbs[object_id]["classes"] = classes
         self.tracker_info_history[timestamp] = self.tracker_info
         self.tracker_update_running = False

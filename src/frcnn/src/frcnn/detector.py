@@ -83,6 +83,11 @@ class Detector:
         rospy.spin()
 
     def set_cls_score_factors(self, class_properties):
+        '''
+        This sets the factor to multiply the score with, depending on the object property type (e.g., shape, color, class)
+        :param class_properties:
+        :return:
+        '''
         if class_properties == None:
             return
         for prop in class_properties.keys():
@@ -92,8 +97,6 @@ class Detector:
 
     def pub_detections(self):
         is_keyframe = False
-        time = self.current_frame_header.stamp
-        # timestamp = int(time.secs * 1000000000 + time.nsecs)
         timestamp = self.current_frame_header.seq
         # print("Publishing bb with timestamp {}".format(timestamp))
         frame_id = self.current_frame_header.frame_id
@@ -105,7 +108,6 @@ class Detector:
         bb_scores = []
         obj_labels = []
         class_names = []
-        max_score = 0
         for cls_ind, cls in enumerate(self.classes[1:]):
             cls_ind += 1  # because we skipped background
             cls_boxes = self.current_boxes[:, 4 * cls_ind:4 * (cls_ind + 1)]
@@ -115,12 +117,8 @@ class Detector:
                 if cls in self.cls_score_factors.keys():
                     cls_score_factor = self.cls_score_factors[cls]
                     score *= cls_score_factor
-                max_score = max(max_score, score)
-                # print max_score
-                # print cls, score, str(self.CONF_THRESH)
                 if float(score) < float(self.CONF_THRESH):
                     continue
-                # raw_input()
                 b_ul_x = b[0]
                 b_ul_y = b[1]
                 b_lr_x = b[2]
@@ -146,7 +144,6 @@ class Detector:
             caffe.set_device(self.args.gpu_id)
             cfg.GPU_ID = self.args.gpu_id
             # print("Set caffe to GPU mode, running on GPU {}".format(cfg.GPU_ID))
-        """Detect object classes in an image using pre-computed object proposals."""
         # Detect all object classes and regress object bounds
         timer = Timer()
         timer.tic()
@@ -156,6 +153,12 @@ class Detector:
                '{:d} object proposals').format(timer.total_time, self.current_boxes.shape[0])
 
     def deserialize_and_detect_thread(self, msg):
+        '''
+        Start object detection. Parse image message and start frame_detect
+        :param msg:
+        :return:
+        '''
+        # If detection is not already running start a new detection
         if not Detector.DETECT_RUNNING:
             Detector.DETECT_RUNNING = True
             self.current_frame_header = msg.header
@@ -169,11 +172,9 @@ class Detector:
                 img = np.swapaxes(img, 0, 2)
                 img = np.swapaxes(img, 1, 0)
             self.current_frame = img
+            assert(self.net is not None, "No network selected")
             if self.net is not None:
                 self.frame_detect(self.net, img)
-                # re-publish image that is worked on
-                # self.bb_img_pub.publish(msg)
-                # publish actual detections
                 self.pub_detections()
 
             now = time.time()
@@ -182,8 +183,8 @@ class Detector:
             print("Running for {} sec., detection with {} fps.".format(detection_time, fps))
 
             Detector.DETECT_RUNNING = False
+        # Skip detection if another detection is running already
         else:
-            # print("SKipping detection in frame {}".format(im_id))
             pass
 
     def cb_frame_rec(self, msg):

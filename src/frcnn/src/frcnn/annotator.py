@@ -60,8 +60,8 @@ class Annotator:
         xml_str = "<annotation>\n" + \
                   "\t<folder>{}</folder>\n".format("nico2017") + \
                   "\t<filename>{}</filename>".format(img_filename) + \
-                  "\t<source></source>\n" + \
-                  "\t<owner></owner>\n" + \
+                  "\t<source>{}</source>\n".format(filepath) + \
+                  "\t<owner>Manfred Eppe, Knowledge Technology Group, University of Hamburg</owner>\n" + \
                   "\t<size>\n" + \
                   "\t\t<width>{}</width>\n".format(img_width) + \
                   "\t\t<height>{}</height>\n".format(img_height) + \
