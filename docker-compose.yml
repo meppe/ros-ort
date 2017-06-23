@@ -2,6 +2,28 @@ version: '2'
 
 services:
   
+  ####################
+  #   Keyval store   #
+  ####################
+  # roscore_kinetic:
+  #   image: meppe78/ros-core-kinetic
+  #   container_name: roscore_kinetic
+  #   command: ["roscore"]
+  #   networks:
+  #     - default
+
+
+  ############
+  #   CORE   #
+  ############
+  roscore_kinetic:
+    image: meppe78/ros-core-kinetic
+    container_name: roscore_kinetic
+    command: ["roscore"]
+    networks:
+      - default
+      # - multihost
+
   ################
   #   ANNOTATE   #
   ################
@@ -49,7 +71,7 @@ services:
 
   detect_demo_cpu:
     image: meppe78/ros-kinetic-frcnn-training
-        environment:
+    environment:
       - DISPLAY=:0
       - ROS_MASTER_URI=http://roscore_kinetic:11311
       - QT_X11_NO_MITSHM=1
@@ -91,15 +113,7 @@ services:
     networks:
       - default
 
-  ############
-  #   CORE   #
-  ############
-  roscore_kinetic:
-    image: meppe78/ros-core-kinetic
-    container_name: roscore_kinetic
-    command: ["roscore"]
-    networks:
-      - default
+  
 
 
   ################
@@ -123,7 +137,11 @@ services:
 
     working_dir: /opt/ros-ort
     container_name: ros_video_stream
-    command: ["roslaunch src/video_stream_opencv/launch/camera.launch visualize:=false camera_name:=frcnn_input fps:=1 video_stream_provider:=${ROS_ORT_VIDEO}"]
+    command: ["roslaunch src/video_stream_opencv/launch/camera.launch 
+              visualize:=false 
+              camera_name:=frcnn_input 
+              fps:=1
+              video_stream_provider:=${ROS_ORT_VIDEO}"]
     links: 
       - roscore_kinetic
     networks:
@@ -251,3 +269,5 @@ services:
 networks:
     default:
       driver: bridge
+    multihost:
+      driver: overlay

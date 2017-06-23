@@ -44,8 +44,6 @@ class Tracker:
     def cb_bb_rec(self, msg):
 
         self.last_detected_bbs = Tracker.bb_msg_to_bb_dict(msg)
-
-        self.last_detected_bb_timestamp = int(msg.frame_timestamp)
         self.last_detected_bb_timestamp = int(msg.frame_timestamp)
 
         print("Received BB object detections for frame {}. Last image frame is {}.".format(
@@ -54,19 +52,24 @@ class Tracker:
         self.align_detections_and_trackers(self.last_detected_bbs)
 
         # Clean up input data queue and remove all frames at and before the last detection.
-        img_queue_to_keep = {}
+        # img_queue_to_keep = {}
+        imgs_to_del = []
         tracker_history_to_keep = {}
         for timestamp in sorted(self.img_stream_queue.keys()):
-            if timestamp >= self.last_detected_bb_timestamp and timestamp <= self.last_img_timestamp:
-                img_queue_to_keep[timestamp] = self.img_stream_queue[timestamp]
+            if timestamp >= self.last_detected_bb_timestamp and timestamp < self.last_img_timestamp:
                 # Wait for tracking to be finished for that timestamp.
-                while timestamp not in self.tracker_info_history.keys():
-                    print("Waiting for tracking frame {} to finish.".format(str(timestamp)))
-                    time.sleep(0.01)
-                tracker_history_to_keep[timestamp] = self.tracker_info_history[timestamp]
+                # while timestamp not in self.tracker_info_history.keys():
+                #     print("Waiting for tracking frame {} to finish.".format(str(timestamp)))
+                #     time.sleep(0.01)
+                # if timestamp not in self.tracker_info_history.keys():
+                #     print("Warning, frame with timestamp {} not in tracker info history.".format(str(timestamp)))
+                #     continue
+                imgs_to_del.append(timestamp)
+                # img_queue_to_keep[timestamp] = self.img_stream_queue[timestamp]
+                # tracker_history_to_keep[timestamp] = self.tracker_info_history[timestamp]
 
-        self.img_stream_queue = img_queue_to_keep
-        self.tracker_info_history = tracker_history_to_keep
+        for img in imgs_to_del:
+            del self.img_stream_queue[img]
 
     def cb_txt_interface(self, interface_string_msg):
         print "Received classes string message: {}".format(str(interface_string_msg))
@@ -83,7 +86,6 @@ class Tracker:
             fname = interface_string[5:]
             print ("Setting file to write to {} ".format(fname))
             self.write_to_file = fname
-            # Toggle masking
         else:
             self.classes_to_display = interface_string.split(",")
 
@@ -147,7 +149,7 @@ class Tracker:
 
             # Throw away those bbs with a low score (the total score without removing classes)
             if bb["score"] < self.cum_threshold:
-                print("score {} too low".format(bb["score"]))
+                print("Score for bounding box for object {} too low to display ({})".format(obj_id, bb["score"]))
                 continue
 
             bbox = bb["bbox"]
@@ -289,21 +291,17 @@ class Tracker:
         self.cv_bridge = CvBridge()
         self.img_stream_queue = {}
         self.tracker_info_history = {}
-        # self.bb_history = {}
 
-        # Maximum amout of time (or frames) that the bb message comes after the image. This is used to clean up the
-        # image queue.
+        # Maximum amout of time (or frames) that the bb message may be received after the image. This is used to clean up the image queue.
         self.max_time_bb_behind = 20
 
         rospy.init_node("frcnn_tracker")
-        # Subscribe to bb and image
+        # Subscribe to bb and image and txt console messages
         self.sub_bb = rospy.Subscriber("/frcnn/bb", Object_bb_list, self.cb_bb_rec, queue_size=10)
         self.sub_camera_raw = rospy.Subscriber("/frcnn_input/image_raw", Image, self.cb_camera_raw, queue_size=10)
-        # This subscribes to the images that are actually processed by the detector. These are also stacked on the
-        # image queue to assure that trackers are started with frames on which objectes were detected
-        # self.sub_camera_raw_detection = rospy.Subscriber("/frcnn/bb_img", Image, self.cb_camera_raw, queue_size=10)
-        self.bb_img_pub = rospy.Publisher('/frcnn/bb_img_tracking', Image, queue_size=10)
         self.sub_bb = rospy.Subscriber("/frcnn/interface_input", String, self.cb_txt_interface, queue_size=10)
+        # Publish img with bounding boxes
+        self.bb_img_pub = rospy.Publisher('/frcnn/bb_img_tracking', Image, queue_size=10)
         self.last_img_timestamp = 0
         self.mask_objects = mask_objects
         self.classes_to_display = classes_to_display
