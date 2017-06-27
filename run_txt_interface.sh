@@ -5,6 +5,7 @@ docker run \
 --rm \
 --name ros_kinetic_txt_interface \
 --link roscore_kinetic \
+--net rosort_default \
 -e ROS_MASTER_URI=http://roscore_kinetic:11311/ \
 meppe78/ros-core-kinetic \
 bash -c '
@@ -14,6 +15,7 @@ do
 	Enter classes to display, separated by \",\".
 	Enter \"all\" to display all classes.
 	Enter \"mask\" to toggle object masking.
+	Enter \"single\" to toggle display of only a single object with the highest score.
 	Enter \"file:<path>/<to>/<file>\" to specify a file for output.
 	Enter \"exit\" to exit."
 	read input

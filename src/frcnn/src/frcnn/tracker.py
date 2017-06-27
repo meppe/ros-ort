@@ -82,6 +82,10 @@ class Tracker:
             # Toggle masking
             self.mask_objects = not self.mask_objects
             print("Setting masking to {}".format(self.mask_objects))
+        elif interface_string == "single":
+            # Toggle whether to display only the one single object with the highest score.
+            self.single_object = not self.single_object
+            print("Setting masking to {}".format(self.mask_objects))
         elif interface_string[:5] == "file:":
             fname = interface_string[5:]
             print ("Setting file to write to {} ".format(fname))
@@ -132,24 +136,44 @@ class Tracker:
         width = im.shape[1]
         height = im.shape[0]
         depth = 3
-
         obj_boxes_mask = np.zeros(shape=(height, width, depth), dtype=np.uint8)
-        for obj_id, bb in bbs.items():
 
+        # Compute object socres
+        bb_scores = {}
+        for obj_id, bb in bbs.items():
+            bb_scores[obj_id] = 0
+            for cls in sorted(bb["classes"], key=bb["classes"].get, reverse=True):
+                scr = float(bb["classes"][cls])
+                if self.classes_to_display == [] or cls in self.classes_to_display:
+                    bb_scores[obj_id] += scr
+        max_score_obj = max(bb_scores, key=bb_scores.get)
+
+        for obj_id, bb in bbs.items():
+            # If the goal is to show only a single object, and if this is not the object with the highest score, then continue.
+            if self.single_object and obj_id != max_score_obj:
+                continue
             # Throw away those classes with a low score and
             # throw away those bbs that do not show one of the classes to display
             bb_orig = bb
             for cls in sorted(bb["classes"], key=bb["classes"].get, reverse=True):
                 scr = float(bb["classes"][cls])
+                # Score has to be above a certain threshold
                 if scr < self.class_threshold:
                     del bb_orig["classes"][cls]
+                    continue
+                # Class has to be in classes_to_display
                 if self.classes_to_display != [] and cls not in self.classes_to_display:
                     del bb_orig["classes"][cls]
+                    continue
+
             bb = bb_orig
 
             # Throw away those bbs with a low score (the total score without removing classes)
             if bb["score"] < self.cum_threshold:
                 print("Score for bounding box for object {} too low to display ({})".format(obj_id, bb["score"]))
+                continue
+
+            if len(bb["classes"].keys()) == 0:
                 continue
 
             bbox = bb["bbox"]
@@ -279,10 +303,9 @@ class Tracker:
                 bb_clusters_by_id[obj_id]["label"] = obj_id
                 bb_clusters_by_id[obj_id]["class"] = cls
                 bb_clusters_by_id[obj_id]["timestamp"] = timestamp
-
         return bb_clusters_by_id
 
-    def __init__(self, mask_objects=False, classes_to_display=[], write_to_file=''):
+    def __init__(self, mask_objects=False, single_object=False, classes_to_display=[], write_to_file=''):
         print("Initializing the Tracker")
         self.last_detected_bbs = {}
         self.last_detected_bb_clusters = {}
@@ -304,6 +327,7 @@ class Tracker:
         self.bb_img_pub = rospy.Publisher('/frcnn/bb_img_tracking', Image, queue_size=10)
         self.last_img_timestamp = 0
         self.mask_objects = mask_objects
+        self.single_object = single_object
         self.classes_to_display = classes_to_display
         self.write_to_file = write_to_file
         rospy.spin()
