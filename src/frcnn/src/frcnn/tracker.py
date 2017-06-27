@@ -131,7 +131,7 @@ class Tracker:
         # print("Image shape: {}".format(im.shape))
         rect_color = (0, 0, 255)
         font_color = (255, 255, 255)
-        bg_color = (255, 0, 0)
+        bg_color = (141, 93, 65)
         mask_color = (1, 1, 1)
         width = im.shape[1]
         height = im.shape[0]
