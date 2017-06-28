@@ -22,10 +22,10 @@ from lib.fast_rcnn.config import cfg
 
 class Nico(imdb):
     CLASSES = ('__background__',  # always index 0
-                'banana', 'eggplant', 'apple', 'tomato', 'fish', 'pepper', 'lemon', 'die',
+                'banana', 'eggplant', 'apple', 'tomato', 'fish', 'pepper', 'lemon', 'die', 'ball',
                 'long', 'round', 'squared',
                 'yellow', 'purple', 'green', 'red', 'gray', 'white', 'orange',
-                'none3', 'none4')
+                'none4')
 
     # This defines the factor by which scores for objects of a specific class are multiplied to achieve an equal
     # distribution of predicted annotations for the different object properties.
@@ -33,10 +33,10 @@ class Nico(imdb):
     #                     'shapes': (350, ['long', 'round', 'squared']),
     #                     'colors': (50, ['yellow', 'purple', 'green', 'red', 'gray', 'white', 'orange']),
     #                     'none': (0, ['__background__', 'none3', 'none_4'])}
-    CLASS_PROPERTIES = {'classes': (1, ['banana', 'eggplant', 'apple', 'tomato', 'fish', 'pepper', 'lemon', 'die']),
+    CLASS_PROPERTIES = {'classes': (1, ['banana', 'eggplant', 'apple', 'tomato', 'fish', 'pepper', 'lemon', 'die', 'ball']),
                         'shapes': (50, ['long', 'round', 'squared']),
                         'colors': (50, ['yellow', 'purple', 'green', 'red', 'gray', 'white', 'orange']),
-                        'none': (0, ['__background__', 'none3', 'none_4'])}
+                        'none': (0, ['__background__', 'none_4'])}
 
     def __init__(self, image_set, year, devkit_path=None):
         imdb.__init__(self, 'nico_' + year + '_' + image_set)

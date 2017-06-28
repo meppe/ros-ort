@@ -9,7 +9,7 @@ for filename in *; do
     echo processing "$filename"
     mkdir "$data_root"/video_frames/"$filename"
 
-     ffmpeg -i "$filename" -vf scale=640:480 -c:v libx264 -preset fast "$filename"_resized.mp4 -hide_banner
+     ffmpeg -i "$filename" -vf scale=640:360,setdar=16:9 -c:v libx264 -preset fast "$filename"_resized.mp4 -hide_banner
      ffmpeg -i "$filename"_resized.mp4 -r 10/1 "$data_root"/video_frames/"$filename"/frame_%03d.jpg
      rm "$filename"_resized.mp4
 

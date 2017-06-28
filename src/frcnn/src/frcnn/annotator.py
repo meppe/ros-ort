@@ -219,12 +219,12 @@ class Annotator:
             cv2.imshow(wName, rectI.image)
             key = cv2.waitKey(1) & 0xFF
             # key = cv2.waitKey(0)
-            print("key: {}".format(key))
+            # print("key: {}".format(key))
             # if returnflag is True, break from the loop
             if rectI.returnflag == True:
                 # print("returnflag")
                 break
-            print(counter)
+            # print(counter)
             counter += 1
         # rectI.returnflag == False
 
