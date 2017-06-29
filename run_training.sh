@@ -22,5 +22,5 @@ meppe78/ros-kinetic-frcnn-training \
 bash -c "cp -rn /py-faster-rcnn /opt/ros-ort/src/frcnn/src/ \
         && touch /storage/data/cache/dummyfile \
         && rm /storage/data/cache/* \
-        && python src/frcnn/scripts/run_training.py --set DATA_DIR /storage/data"
+        && python src/frcnn/scripts/run_training.py --set DATA_DIR \"/informatik2/wtm/datasets/KT Internal Datasets/20170601_NICO-graspingVideos\""
 

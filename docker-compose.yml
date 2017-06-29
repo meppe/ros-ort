@@ -94,7 +94,7 @@ services:
     working_dir: /opt/ros-ort
     container_name: ros_frcnn_training
     command: [
-              "/usr/bin/python src/frcnn/scripts/run_training.py --set DATA_DIR /storage/data"
+              "/usr/bin/python src/frcnn/scripts/run_training.py --set DATA_DIR \"/informatik2/wtm/datasets/KT Internal Datasets/20170601_NICO-graspingVideos\""
               ]
     entrypoint: /train_entrypoint.sh
     links: 
