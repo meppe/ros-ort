@@ -1,2 +1,8 @@
 #!/bin/bash
-docker-compose run roscore_kinetic
+docker rm roscore_kinetic
+docker run \
+-it \
+--rm \
+--name roscore_kinetic \
+meppe78/ros-core-kinetic \
+roscore

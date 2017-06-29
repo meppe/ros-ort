@@ -2,17 +2,6 @@ version: '2'
 
 services:
   
-  ####################
-  #   Keyval store   #
-  ####################
-  # roscore_kinetic:
-  #   image: meppe78/ros-core-kinetic
-  #   container_name: roscore_kinetic
-  #   command: ["roscore"]
-  #   networks:
-  #     - default
-
-
   ############
   #   CORE   #
   ############
@@ -22,7 +11,7 @@ services:
     command: ["roscore"]
     networks:
       - default
-      # - multihost
+
 
   ################
   #   ANNOTATE   #
@@ -270,5 +259,5 @@ services:
 networks:
     default:
       driver: bridge
-    multihost:
-      driver: overlay
+
+

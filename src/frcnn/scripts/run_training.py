@@ -27,8 +27,8 @@ def parse_args():
     # Default values: #
     ###################
 
-    net = "VGG16"
-    # net = "ZF"
+    # net = "VGG16"
+    net = "ZF"
 
     dataset = "nico"
     # train_imdb = "nico_2017_trainval"
