@@ -17,10 +17,7 @@ nvidia-docker run \
 --env="QT_X11_NO_MITSHM=1" \
 --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
 --name ros_frcnn_training \
---entrypoint="/dummy_entrypoint.sh" \
+--entrypoint="/train_entrypoint.sh" \
 meppe78/ros-kinetic-frcnn-training \
-bash -c "cp -rn /py-faster-rcnn /opt/ros-ort/src/frcnn/src/ \
-        && touch /storage/data/cache/dummyfile \
-        && rm /storage/data/cache/* \
-        && python src/frcnn/scripts/run_training.py --set DATA_DIR \"/informatik2/wtm/datasets/KT Internal Datasets/20170601_NICO-graspingVideos\""
+/usr/bin/python src/frcnn/scripts/run_training.py --set DATA_DIR /storage/data
 
