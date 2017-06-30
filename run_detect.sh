@@ -27,7 +27,3 @@ fi
 	python src/frcnn/scripts/run_detect.py --threshold 0.1 --model nico_vgg16 $args
 
 
-#cp -rn /py-faster-rcnn /opt/ros-ort/src/frcnn/src/ \
-#				&& source '/opt/ros/kinetic/setup.bash' \
-#				&& source '/opt/ros-ort/devel/setup.bash' \
-#				&&
