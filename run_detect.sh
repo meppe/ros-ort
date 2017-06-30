@@ -1,4 +1,5 @@
 #!/bin/bash
+docker pull meppe78/ros-kinetic-frcnn
 docker rm ros_frcnn_detect
 ### If using ZF models, run with a very low conf threshold
 if [ "$1" = "--gpu" ]; then
@@ -23,9 +24,10 @@ fi
 	--name ros_frcnn_detect \
 	--entrypoint="/frcnn_entrypoint.sh" \
 	meppe78/ros-kinetic-frcnn \
-	bash -c "cp -rn /py-faster-rcnn /opt/ros-ort/src/frcnn/src/ \
-				&& source '/opt/ros/kinetic/setup.bash' \
-				&& source '/opt/ros-ort/devel/setup.bash' \
-				&& python src/frcnn/scripts/run_detect.py --threshold 0.1 --model nico_zf $args"
+	python src/frcnn/scripts/run_detect.py --threshold 0.1 --model nico_vgg16 $args
 
 
+#cp -rn /py-faster-rcnn /opt/ros-ort/src/frcnn/src/ \
+#				&& source '/opt/ros/kinetic/setup.bash' \
+#				&& source '/opt/ros-ort/devel/setup.bash' \
+#				&&

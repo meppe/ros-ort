@@ -1,4 +1,5 @@
 #!/bin/bash
+xhost +local:`docker inspect --format='{{ .Config.Hostname }}' ros_video_stream`
 docker rm ros_video_stream
 echo "The first and only argument to this script is the relative filepath of the video inside the container. \
         If no argument is given, the script will publish from /dev/video0"
@@ -10,6 +11,7 @@ else
     filepath=$working_dir"/"$1
     echo "Running stream from $filepath"
 fi
+
 docker run \
 --rm \
 -v /$(pwd)/src/video_stream_opencv:/opt/ros-ort/src/video_stream_opencv \
@@ -25,14 +27,10 @@ docker run \
 --device="/dev/video0" \
 --name ros_video_stream \
 meppe78/ros-kinetic-video-stream \
- bash -c "source /opt/ros/kinetic/setup.bash && source /opt/ros-ort/devel/setup.bash && \
-            roslaunch src/video_stream_opencv/launch/camera.launch \
+           roslaunch src/video_stream_opencv/launch/camera.launch \
             visualize:=false \
             video_stream_provider:="$filepath" \
             camera_name:=frcnn_input \
-            fps:=10"
+            fps:=10
 
-# Play a bag file
-# bash -c "source '/opt/ros/kinetic/setup.bash' && source '/opt/ros-ort/devel/setup.bash' && \
-# 		rosbag play -l video_data/LSD_room.bag -r 0.02 -l /image_raw:=/frcnn_input/image_raw"
-
+xhost -local:`docker inspect --format='{{ .Config.Hostname }}' ros_video_stream`
