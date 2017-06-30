@@ -24,6 +24,6 @@ fi
 	--name ros_frcnn_detect \
 	--entrypoint="/frcnn_entrypoint.sh" \
 	meppe78/ros-kinetic-frcnn \
-	python src/frcnn/scripts/run_detect.py --threshold 0.1 --model nico_vgg16 $args
+	python src/frcnn/scripts/run_detect.py --threshold 0.1 --model nico_zf $args
 
 
