@@ -1,5 +1,6 @@
 #!/bin/bash
 xhost +local:`docker inspect --format='{{ .Config.Hostname }}' ros_video_stream`
+docker pull meppe78/ros-kinetic-video-stream
 docker rm ros_video_stream
 echo "The first and only argument to this script is the relative filepath of the video inside the container. \
         If no argument is given, the script will publish from /dev/video0"
@@ -31,6 +32,6 @@ meppe78/ros-kinetic-video-stream \
             visualize:=false \
             video_stream_provider:="$filepath" \
             camera_name:=frcnn_input \
-            fps:=10
+            fps:=1
 
 xhost -local:`docker inspect --format='{{ .Config.Hostname }}' ros_video_stream`

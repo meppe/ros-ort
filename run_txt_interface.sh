@@ -5,7 +5,7 @@ docker run \
 --rm \
 --name ros_kinetic_txt_interface \
 --link roscore_kinetic \
---net rosort_default \
+--net default \
 -e ROS_MASTER_URI=http://roscore_kinetic:11311/ \
 meppe78/ros-core-kinetic \
 bash -c '
