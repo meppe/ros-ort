@@ -6,6 +6,7 @@ docker run \
 -v /$(pwd)/src/frcnn:/opt/ros-ort/src/frcnn \
 -v /$(pwd)/src/ort_msgs:/opt/ros-ort/src/ort_msgs \
 -v /$(pwd)/output:/opt/ros-ort/output \
+-v /tmp:/tmp \
 -it \
 --workdir="//opt/ros-ort" \
 --link roscore_kinetic \
