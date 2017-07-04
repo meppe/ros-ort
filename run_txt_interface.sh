@@ -25,4 +25,5 @@ do
 	echo "You entered: $input"
 	rostopic pub frcnn/interface_input std_msgs/String "$input"
 done
+bash
 '
