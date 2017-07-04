@@ -4,9 +4,8 @@ docker run \
 -it \
 --rm \
 --name ros_kinetic_txt_interface \
---link roscore_kinetic \
 --net default \
--e ROS_MASTER_URI=http://roscore_kinetic:11311/ \
+-e ROS_MASTER_URI=http://localhost:11311/ \
 meppe78/ros-core-kinetic \
 bash -c '
 while true
@@ -17,7 +16,7 @@ do
 	Enter \"mask\" to toggle object masking.
 	Enter \"single\" to toggle display of only a single object with the highest score.
 	Enter \"file:<path>/<to>/<file>\" to specify a file for output.
-	Enter \"exit\" to exit."
+	Enter \"exit\" to exit into a bash."
 	read input
 	if [ "$input" = exit ]; then
 	    break
