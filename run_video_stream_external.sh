@@ -20,8 +20,7 @@ docker run \
 -v /$(pwd)/video_data:/opt/ros-ort/video_data \
 -it \
 --workdir=$working_dir \
---link roscore_kinetic \
--e ROS_MASTER_URI=http://roscore_kinetic:11311/ \
+-e ROS_MASTER_URI=http://134.100.10.141:11311/ \
 --env="DISPLAY" \
 --env="QT_X11_NO_MITSHM=1" \
 --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \

@@ -23,7 +23,8 @@ fi
 	-v /$(pwd)/output:/opt/ros-ort/output \
 	-it \
 	--workdir="//opt/ros-ort" \
-	-e ROS_MASTER_URI=http://134.100.10.141:11311/ \
+	--link roscore_kinetic \
+	-e ROS_MASTER_URI=http://roscore_kinetic:11311/ \
 	--name ros_frcnn_detect \
 	--entrypoint="/frcnn_entrypoint.sh" \
 	meppe78/ros-kinetic-frcnn \

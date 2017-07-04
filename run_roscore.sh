@@ -7,8 +7,7 @@ docker run \
 -it \
 --rm \
 --name roscore_kinetic \
--net bridge \
-#-p 11311:11311 \
+--network bridge \
 meppe78/ros-core-kinetic \
 roscore
 
