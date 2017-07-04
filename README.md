@@ -8,7 +8,7 @@ The system consists of several ROS nodes that each run as a separate docker cont
 
 For GPU support you need an NVIDIA-driver version >=8.0 and a GPU.
 
-Once you have met the above extrendencies, clone this repository and initialize the submodules using ```git submodule update --init --recursive``. 
+Once you have met the above extrendencies, clone this repository and initialize the submodules using ```git submodule update --init --recursive```. 
 
 ## Quickstart - Object recognition and tracking with pretrained networks
 
