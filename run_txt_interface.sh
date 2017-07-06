@@ -4,8 +4,8 @@ docker run \
 -it \
 --rm \
 --name ros_kinetic_txt_interface \
---net default \
--e ROS_MASTER_URI=http://localhost:11311/ \
+--link roscore_kinetic \
+-e ROS_MASTER_URI=http://roscore_kinetic:11311/ \
 meppe78/ros-core-kinetic \
 bash -c '
 while true

@@ -8,7 +8,7 @@ nvidia-docker run \
 -v /$(pwd)/src/ort_msgs:/opt/ros-ort/src/ort_msgs \
 -v /$(pwd)/output:/opt/ros-ort/output \
 -v /$(pwd)/src/frcnn/src/py-faster-rcnn:/opt/ros-ort/src/frcnn/src/py-faster-rcnn \
--v /storage/data:/storage/data \
+-v /data/train_data:/storage/data \
 -v /$(pwd):/opt/ros-ort \
 -it \
 --workdir="//opt/ros-ort" \

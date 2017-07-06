@@ -21,6 +21,7 @@ import sys
 import argparse
 
 BASE_DIR = "/opt/ros-ort/src/frcnn/src/"
+MODELS_DIR = "/opt/ros-ort/caffemodels/"
 
 def parse_args():
     ###################
@@ -56,7 +57,7 @@ def parse_args():
                         default=iters, type=int)
     parser.add_argument('--weights', dest='pretrained_model',
                         help='initialize with pretrained model weights',
-                        default=BASE_DIR+'/data/imagenet_models/'+net+'.v2.caffemodel', type=str)
+                        default=MODELS_DIR+'imagenet_models/'+net+'.v2.caffemodel', type=str)
     # parser.add_argument('--weights', dest='pretrained_model',
     #                     help='initialize with pretrained model weights',
     #                     default=None, type=str)
