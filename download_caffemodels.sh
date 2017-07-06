@@ -6,9 +6,13 @@ cd caffemodels
 
 ./fetch_faster_rcnn_models.sh
 
-#./fetch_imagenet_models.sh
+./fetch_imagenet_models.sh
 
-#./fetch_selective_search_data.sh
+./fetch_selective_search_data.sh
+
+./download_nico_faster_rcnn_models.sh
+
+
 
 
 
