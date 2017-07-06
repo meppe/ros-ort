@@ -6,7 +6,7 @@
 mkdir nico_frcnn_models
 
 FILE="nico_frcnn_models/ZF_faster_rcnn_nico.caffemodel"
-URL="https://drive.google.com/uc?export=download&id=0B_Cy6UXhY3PIRjJXb3I0cy1DQk0"
+URL="https://drive.google.com/uc?export=download&id=0B_Cy6UXhY3PIMHJfckpaQm41Snc"
 #CHECKSUM=e2a75a32ed77a9d663e496387808b02f
 ##
 #if [ -f $FILE ]; then
@@ -41,8 +41,8 @@ wget $URL -O $FILE
 echo "Done. Please run this command again to verify that checksum = $CHECKSUM."
 
 
-FILE="VGG16_faster_rcnn_nico.caffemodel"
-URL="https://drive.google.com/uc?export=download&id=0B_Cy6UXhY3PIVkRSRVhHLVlTUWM"
+#FILE="VGG16_faster_rcnn_nico.caffemodel"
+#URL="https://drive.google.com/uc?export=download&id=0B_Cy6UXhY3PIVkRSRVhHLVlTUWM"
 #CHECKSUM=04911bbb58aa2cce601760d021d5ed99
 ##
 #if [ -f $FILE ]; then
@@ -61,12 +61,12 @@ URL="https://drive.google.com/uc?export=download&id=0B_Cy6UXhY3PIVkRSRVhHLVlTUWM
 #  fi
 #fi
 
-echo "Downloading Faster R-CNN VGG16 model for NICO (226M)..."
+#echo "Downloading Faster R-CNN VGG16 model for NICO (226M)..."
 #
-wget $URL -O nico_frcnn_models/$FILE
+#wget $URL -O nico_frcnn_models/$FILE
 #
 #echo "Unzipping..."
 #
 #tar zxvf $FILE
 #
-echo "Done. Please run this command again to verify that checksum = $CHECKSUM."
+#echo "Done. Please run this command again to verify that checksum = $CHECKSUM."
