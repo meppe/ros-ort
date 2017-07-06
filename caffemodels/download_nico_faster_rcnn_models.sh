@@ -5,29 +5,34 @@
 
 mkdir nico_frcnn_models
 
-FILE="nico_frcnn_models/ZF_faster_rcnn_final.caffemodel"
+FILE="nico_frcnn_models/ZF_faster_rcnn_nico.caffemodel"
 URL="https://drive.google.com/uc?export=download&id=0B_Cy6UXhY3PIRDFmcGdMZG1nV0U"
-CHECKSUM=a79fe9f75fd4b25d9b887c3f58a44c93
+#CHECKSUM=e2a75a32ed77a9d663e496387808b02f
+##
+#if [ -f $FILE ]; then
+#  echo "File already exists. Checking md5 of $FILE..."
+#  os=`uname -s`
+#  if [ "$os" = "Linux" ]; then
+#    checksum=`md5sum $FILE | awk '{ print $1 }'`
+#  elif [ "$os" = "Darwin" ]; then
+#    checksum=`cat $FILE | md5`
+#  fi
+#  if [ "$checksum" = "$CHECKSUM" ]; then
+#    echo "Checksum is correct. No need to download."
+#  else
+#    echo "Checksum is incorrect. Need to download again."
+#    echo "Downloading Faster R-CNN ZF model for NICO (226M)..."
+#    wget $URL -O $FILE
 #
-if [ -f $FILE ]; then
-  echo "File already exists. Checking md5..."
-  os=`uname -s`
-  if [ "$os" = "Linux" ]; then
-    checksum=`md5sum $FILE | awk '{ print $1 }'`
-  elif [ "$os" = "Darwin" ]; then
-    checksum=`cat $FILE | md5`
-  fi
-  if [ "$checksum" = "$CHECKSUM" ]; then
-    echo "Checksum is correct. No need to download."
-    exit 0
-  else
-    echo "Checksum is incorrect. Need to download again."
-  fi
-fi
+#  fi
+#else
+#    echo "Downloading Faster R-CNN ZF model for NICO (226M)..."
+#    wget $URL -O $FILE
+#fi
 
 echo "Downloading Faster R-CNN ZF model for NICO (226M)..."
-#
 wget $URL -O $FILE
+
 #
 #echo "Unzipping..."
 #
@@ -36,27 +41,27 @@ wget $URL -O $FILE
 echo "Done. Please run this command again to verify that checksum = $CHECKSUM."
 
 
-FILE="VGG16_faster_rcnn_final.caffemodel"
+FILE="VGG16_faster_rcnn_nico.caffemodel"
 URL="https://drive.google.com/uc?export=download&id=0B_Cy6UXhY3PIVkRSRVhHLVlTUWM"
-CHECKSUM=a79fe9f75fd4b25d9b887c3f58a44c93
-#
-if [ -f $FILE ]; then
-  echo "File already exists. Checking md5..."
-  os=`uname -s`
-  if [ "$os" = "Linux" ]; then
-    checksum=`md5sum $FILE | awk '{ print $1 }'`
-  elif [ "$os" = "Darwin" ]; then
-    checksum=`cat $FILE | md5`
-  fi
-  if [ "$checksum" = "$CHECKSUM" ]; then
-    echo "Checksum is correct. No need to download."
-    exit 0
-  else
-    echo "Checksum is incorrect. Need to download again."
-  fi
-fi
+#CHECKSUM=04911bbb58aa2cce601760d021d5ed99
+##
+#if [ -f $FILE ]; then
+#  echo "File already exists. Checking md5 of $FILE..."
+#  os=`uname -s`
+#  if [ "$os" = "Linux" ]; then
+#    checksum=`md5sum $FILE | awk '{ print $1 }'`
+#  elif [ "$os" = "Darwin" ]; then
+#    checksum=`cat $FILE | md5`
+#  fi
+#  if [ "$checksum" = "$CHECKSUM" ]; then
+#    echo "Checksum is correct. No need to download."
+#    exit 0
+#  else
+#    echo "Checksum is incorrect. Need to download again."
+#  fi
+#fi
 
-echo "Downloading Faster R-CNN ZF model for NICO (226M)..."
+echo "Downloading Faster R-CNN VGG16 model for NICO (226M)..."
 #
 wget $URL -O nico_frcnn_models/$FILE
 #
