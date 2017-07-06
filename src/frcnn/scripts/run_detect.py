@@ -65,19 +65,19 @@ MODELS = {
             #        'test.prototxt',
             #        CLASSES_COCO, NETS_COCO),
           'pascal_vgg16': (
-                     'src/frcnn/src/data/faster_rcnn_models/VGG16_faster_rcnn_final.caffemodel',
+                     'caffemodels/faster_rcnn_models/VGG16_faster_rcnn_nico.caffemodel',
                      'src/frcnn/src/models/pascal_voc/VGG16/faster_rcnn_end2end/test.prototxt',
                      CLASSES_PASCAL),
           'pascal_zf': (
-                     'src/frcnn/src/data/faster_rcnn_models/ZF_faster_rcnn_final.caffemodel',
+                     'caffemodels/faster_rcnn_models/VGG16_faster_rcnn_nico.caffemodel',
                      'src/frcnn/src/models/pascal_voc/ZF/faster_rcnn_end2end/test.prototxt',
                      CLASSES_PASCAL),
           'nico_zf': (
-                   'src/frcnn/src/output/faster_rcnn_end2end/nico_2017_trainval/zf_faster_rcnn_iter_40000.caffemodel',
+                   'caffemodels/nico_frcnn_models/ZF_faster_rcnn_nico.caffemodel',
                    'src/frcnn/src/models/nico/ZF/faster_rcnn_end2end/test.prototxt',
                    CLASSES_NICO, CLASS_PROPERTIES_NICO),
           'nico_vgg16': (
-                   'src/frcnn/src/output/faster_rcnn_end2end/nico_2017_trainval/vgg16_faster_rcnn_iter_70000.caffemodel',
+                   'caffemodels/nico_frcnn_models/VGG16_faster_rcnn_nico.caffemodel',
                    'src/frcnn/src/models/nico/VGG16/faster_rcnn_end2end/test.prototxt',
                    CLASSES_NICO, CLASS_PROPERTIES_NICO),
           }

@@ -51,8 +51,7 @@ class Detector:
         caffemodel = caffemodel_file
 
         if not os.path.isfile(caffemodel):
-            raise IOError(('{:s} not found.\nDid you run ./data/script/'
-                           'fetch_faster_rcnn_models.sh?').format(caffemodel))
+            raise IOError(('{:s} not found.\nDid you run ./download_caffemodels.sh?').format(caffemodel))
 
         if not os.path.isfile(prototxt):
             raise IOError(("{:s} not found.\nMaybe this model is incompatible with the "
