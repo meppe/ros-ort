@@ -6,7 +6,7 @@
 mkdir nico_frcnn_models
 
 FILE="nico_frcnn_models/ZF_faster_rcnn_nico.caffemodel"
-URL="https://drive.google.com/uc?export=download&id=0B_Cy6UXhY3PIRDFmcGdMZG1nV0U"
+URL="https://drive.google.com/uc?export=download&id=0B_Cy6UXhY3PIRjJXb3I0cy1DQk0"
 #CHECKSUM=e2a75a32ed77a9d663e496387808b02f
 ##
 #if [ -f $FILE ]; then
