@@ -13,19 +13,6 @@ else
     echo "Running stream from $filepath"
 fi
 
-#docker-machine create -d virtualbox \
-#--swarm \
-#--swarm-discovery="consul://134.100.10.141:8500" \
-#--engine-opt="cluster-store=consul://134.100.10.141:8500" \
-#--engine-opt="cluster-advertise=eth1:2376" \
-#mhs-client1
-
-#docker run \
-#-it \
-#--network multihost \
-#meppe78/ros-core-kinetic
-
-
 docker run \
 --rm \
 -v /$(pwd)/src/video_stream_opencv:/opt/ros-ort/src/video_stream_opencv \
