@@ -6,7 +6,7 @@ if [ "$1" = "--gpu" ]; then
     echo "Running detection on GPU"
     command="docker"
     py_args=""
-    nv_driver=381.22
+    nv_driver=375.26
     args=" --device /dev/nvidia0 --device /dev/nvidiactl --device /dev/nvidia-uvm -v /var/lib/nvidia-docker/volumes/nvidia_driver/${nv_driver}:/usr/local/nvidia:ro"
 else
     echo "Running detection on CPU"
