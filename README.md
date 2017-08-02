@@ -42,8 +42,10 @@ To train your own dataset follow the following steps:
 2. Annotate the frames using the tracker. Do so by starting the `run_annotate.sh` script. Before doing that, make sure that your `DATA_ROOT` folder is set correctly in the `src/frcnn/scripts/run_annotate.py` file. The data folder is arranged according to the PASCAL_VOC convention. For this project you only need to make sure that the following files are in place: 
 	
 	a. ``DATA_ROOT/<dataset_name>/<dataset_subset>/Annotations/<number>.xml`` (the annotation files, one for each frame)
+
 	b. ``DATA_ROOT/<dataset_name>/<dataset_subset>/JPGImages/<number>.jpg`` (the image files, one for each frame)
-	c. ``DATA_ROOT/<dataset_name>/<dataset_subset>/ImageSets/Main/train.txt, test.txt, val.txt, trainval.txt`` (fils that define how the train test val spilt is done)
+
+	c. ``DATA_ROOT/<dataset_name>/<dataset_subset>/ImageSets/Main/train.txt, test.txt, val.txt, trainval.txt`` (files that define how the train test val spilt is done)
 
 In the example case, ``<dataset_name>/<dataset_subset>`` is ``nico2017/nico2017``
 
@@ -52,15 +54,15 @@ See http://host.robots.ox.ac.uk/pascal/VOC/ for more details about the file stru
 3. Start the `run_training.sh` script. Take care that the datafolder is set appropriately, in both the python call via ``--set DATA_DIR /storage/data`` and also the docker volume mount for the data folder, in my case ``-v /storage/data:/storage/data``. The script reads data according to the VOC convention. 
 
 ## Known issues
-With the docker version 17.03.1-ce (and probably neighbouring versions) you can not run ROS-ORT from an NFS drive due to volume mounting issues
 
-For some reason, the `run_annotate.py` only works from within my pycharm ide. When drawing a bounding box after starting it from console using `run_annotate.sh`, it crashes. It crashes at line 219 in `annotator.py`, i.e., at `key = cv2.waitKey(1) & 0xFF`. There are these error messages when starting the script:
+1. With the docker version 17.03.1-ce (and probably neighbouring versions) you can not run ROS-ORT from an NFS drive due to volume mounting issues. Hence, if you are in a university network where your standard folder is on a network drive, you need to make sure you run the scripts from some local folder. 
+
+2. For some reason, the `run_annotate.py` only works from within my pycharm ide. When drawing a bounding box after starting it from console using `run_annotate.sh`, it crashes. It crashes at line 219 in `annotator.py`, i.e., at `key = cv2.waitKey(1) & 0xFF`. There are these error messages when starting the script:
 ```
 libGL error: No matching fbConfigs or visuals found
 libGL error: failed to load driver: swrast
 ```
 
-
-
+I have no idea why this is the case...
 
 

@@ -4,10 +4,9 @@ docker rm ros_frcnn_detect
 ### If using ZF models, run with a very low conf threshold
 if [ "$1" = "--gpu" ]; then
     echo "Running detection on GPU"
-    command="docker"
+    command="nvidia-docker"
     py_args=""
-    nv_driver=375.26
-    args=" --device /dev/nvidia0 --device /dev/nvidiactl --device /dev/nvidia-uvm -v /var/lib/nvidia-docker/volumes/nvidia_driver/${nv_driver}:/usr/local/nvidia:ro"
+    args=""
 else
     echo "Running detection on CPU"
     command="docker"
