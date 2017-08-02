@@ -14,32 +14,37 @@ Once you have met the above extrendencies, clone this repository and initialize 
 
 To see a first quick demo, follow the following steps:
 
-1. ROS core
-	The ROS core node. Start by running the script ```./run_roscore.sh```
+1. Download caffe network models. 
+	To download the pretrained network models, run ```./download_caffemodels.sh```.
 
-2. Video preview
-	This is optional and opens a window that shows the original input video stream. Start by running the script ```./run_video_view.sh```. It will subscribe to the topic frcnn_input/camera_raw. 
-	
-3. Object detection
-	This runs the Faster-RCNN-based object detection. Start by running the script ```./run_frcnn_detect.sh``` for CPU use or ```./run_frcnn_detect.sh --gpu``` for running it on your GPU. It will subscribe to the topic /frcnn_input/camera_raw, and it will publish the topic /frcnn/bb for the bounding box information and the topic /frcnn/bb_img to re-publish those video frames from the input stream which haven been processed. The frequency depends on the processing speed. Without a GPU around 0.1 -- 0.2 Hz.
-	
-4. Object tracking
-	This runs the tracking. It clusters the bounding boxes delivered by the detector (subscribes to topics /frcnn/bb and /frcnn/bb_img) and assigns labels. The results are published on topic /frcnn/bb_img_tracking. 
-	To run the node do ```run_frcnn_track.sh```.
-	
-5. Tracking preview
-	This opens a window to show the tracking result. It subscribes to topic /frcnn/bb_img_tracking. To run the node do ```run_video_stream.sh```
-	
-6. Video stream
-	Once all nodes are running start the video stream. To do this, run `./run_video_stream`.
+2. Run ros nodes. You can run all required nodes automatically by running ```./run_nico_detection.sh```. This script essentially starts the following scripts below:
 
+	1. ROS core
+		The ROS core node. Start by running the script ```./run_roscore.sh```
+
+	2. Video preview
+		This is optional and opens a window that shows the original input video stream. Start by running the script ```./run_video_view.sh```. It will subscribe to the topic frcnn_input/camera_raw. 
+		
+	3. Object detection
+		This runs the Faster-RCNN-based object detection. Start by running the script ```./run_frcnn_detect.sh``` for CPU use or ```./run_frcnn_detect.sh --gpu``` for running it on your GPU. It will subscribe to the topic /frcnn_input/camera_raw, and it will publish the topic /frcnn/bb for the bounding box information and the topic /frcnn/bb_img to re-publish those video frames from the input stream which haven been processed. The frequency depends on the processing speed. Without a GPU around 0.1 -- 0.2 Hz.
+		
+	4. Object tracking
+		This runs the tracking. It clusters the bounding boxes delivered by the detector (subscribes to topics /frcnn/bb and /frcnn/bb_img) and assigns labels. The results are published on topic /frcnn/bb_img_tracking. 
+		To run the node do ```run_frcnn_track.sh```.
+		
+	5. Tracking preview
+		This opens a window to show the tracking result. It subscribes to topic /frcnn/bb_img_tracking. To run the node do ```run_video_stream.sh```
+
+	6. Text interface
+		The script ```./run_txt_interface.sh```  opens the text interface, where you can modify where image files are stored, which objects are to be detected, and whether masking is applied. 
+		
 ## Training own datasets
 
 To train your own dataset follow the following steps:
 
 1. Generate a sequence of frames from a video. This can be done by using the ``generate_frames.sh`` script. Please have a look at it to understand how it works. You have to specify a source folder as a mandatory argument to the script, which contains a set of videos. The target root data folder is set as variable `data_root` in the script; this is the location where the frames are stored. For each source video, a subfolder containing the individual frames is created in the target root folder. 
 
-2. Annotate the frames using the tracker. Do so by starting the `run_annotate.sh` script. Before doing that, make sure that your `DATA_ROOT` folder is set correctly in the `src/frcnn/scripts/run_annotate.py` file. The data folder is arranged according to the PASCAL_VOC convention. For this project you only need to make sure that the following files are in place: 
+2. Annotate the frames using the tracker. Do so by starting the `run_annotate.sh` script (see known issues section below). Before doing that, make sure that your `DATA_ROOT` folder is set correctly in the `src/frcnn/scripts/run_annotate.py` file. The data folder is arranged according to the PASCAL_VOC convention. Specifically, you need to make sure that the following files are in place: 
 	
 	a. ``DATA_ROOT/<dataset_name>/<dataset_subset>/Annotations/<number>.xml`` (the annotation files, one for each frame)
 
