@@ -7,26 +7,6 @@ import copy
 
 class DlibTracker(Tracker):
 
-    # @staticmethod
-    # def xywh_box_to_xyxy_box(bb):
-    #     """Converts from center_x, center_y, width, height to ul_x, ul_y, lr_x, lr_y"""
-    #     """(ul_x, ul_y) are (0,0) in the top left corner"""
-    #     x = bb[0]
-    #     y = bb[1]
-    #     w = bb[2]
-    #     h = bb[3]
-    #     return np.array([int(x-(w/2.)), int(y-(h/2.)), int(x+(w/2.)), int(y+(h/2.))]).tolist()
-    #
-    # @staticmethod
-    # def xyxy_box_to_xywh_box(bb):
-    #     """Converts from center_x, center_y, width, height to ul_x, ul_y, lr_x, lr_y"""
-    #     """(ul_x, ul_y) are (0,0) in the top left corner"""
-    #     x1 = bb[0]
-    #     y1 = bb[1]
-    #     x2 = bb[2]
-    #     y2 = bb[3]
-    #     return np.array([int(x1 + ((x2-x1) / 2)), int(y1 + ((y2-y1) / 2)), int((x2-x1)), int((y2-y1))]).tolist()
-
     @staticmethod
     def iou(bb_test, bb_gt):
         """
@@ -237,7 +217,6 @@ class DlibTracker(Tracker):
                 self.current_bbs[object_id]["classes"] = classes
         finally:
             self.trackers_lock.release()
-            # self.tracker_info_lock.release()
 
     def __init__(self, args):
         self.tracker_info_lock = Lock()
@@ -249,11 +228,14 @@ class DlibTracker(Tracker):
         self.cum_threshold = args.cum_threshold
         self.class_threshold = args.class_threshold
         self.total_score_decay = 1.1
-        # Distance threshold to start a new tracker. The higher the number the more bounding boxes there are.
+        # IOU distance threshold to start a new tracker. The higher the number the more bounding boxes there are.
         self.iou_threshold = 0.2
         self.max_trackers = args.max_trackers
         self.tracker_alignment_running = False
         self.tracker_update_running = False
         print ("Running tracker with arguments {}.".format(args))
-        Tracker.__init__(self, mask_objects=args.mask_objects, write_to_file=args.write_to_file, classes_to_display=[])
+        Tracker.__init__(self, mask_objects=args.mask_objects,
+                         write_to_img_file=args.write_to_img_file,
+                         write_to_detections_file=args.write_to_detections_file,
+                         classes_to_display=[])
 

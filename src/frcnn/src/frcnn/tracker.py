@@ -42,7 +42,6 @@ class Tracker:
 
     # @profile
     def cb_bb_rec(self, msg):
-
         self.last_detected_bbs = Tracker.bb_msg_to_bb_dict(msg)
         self.last_detected_bb_timestamp = int(msg.frame_timestamp)
 
@@ -86,10 +85,14 @@ class Tracker:
             # Toggle whether to display only the one single object with the highest score.
             self.single_object = not self.single_object
             print("Setting masking to {}".format(self.mask_objects))
-        elif interface_string[:5] == "file:":
+        elif interface_string[:5] == "img_file:":
             fname = interface_string[5:]
-            print ("Setting file to write to {} ".format(fname))
-            self.write_to_file = fname
+            print ("Setting file to write image to {} ".format(fname))
+            self.write_to_img_file = fname
+        elif interface_string[:5] == "detect_file:":
+            fname = interface_string[5:]
+            print ("Setting file to write detections and bounding box coordinates to {} ".format(fname))
+            self.write_to_detections_file = fname
         else:
             self.classes_to_display = interface_string.split(",")
 
@@ -109,7 +112,6 @@ class Tracker:
     # @profile
     def vis_tracking(self, im, bbs):
         '''
-
         :param im: The image to display.
         :param bbs: The bounding boxes with object id and class information to display.
         :param classes: If a non-empty list is given, then only display object classes in the list.
@@ -146,7 +148,8 @@ class Tracker:
                 scr = float(bb["classes"][cls])
                 if self.classes_to_display == [] or cls in self.classes_to_display:
                     bb_scores[obj_id] += scr
-        max_score_obj = max(bb_scores, key=bb_scores.get)
+        if len(bb_scores) > 0:
+            max_score_obj = max(bb_scores, key=bb_scores.get)
 
         for obj_id, bb in bbs.items():
             # If the goal is to show only a single object, and if this is not the object with the highest score, then continue.
@@ -211,9 +214,15 @@ class Tracker:
             im += inverse_mask
 
         # Write file to disk if self.write_to_file is set.
-        if self.write_to_file != '':
-            print("Writing image to {}".format(self.write_to_file))
-            cv2.imwrite(self.write_to_file, im)
+        if self.write_to_img_file != '':
+            print("Writing image to {}".format(self.write_to_img_file))
+            cv2.imwrite(self.write_to_img_file, im)
+
+        if self.write_to_detections_file != '':
+            print("Writing detection information to {}".format(self.write_to_detections_file))
+            d_file = open(self.write_to_detections_file, "w")
+            d_file.write(str(bbs))
+            d_file.close()
 
         img_msg = self.cv_bridge.cv2_to_imgmsg(im, encoding="bgr8")
 
@@ -305,7 +314,9 @@ class Tracker:
                 bb_clusters_by_id[obj_id]["timestamp"] = timestamp
         return bb_clusters_by_id
 
-    def __init__(self, mask_objects=False, single_object=False, classes_to_display=[], write_to_file=''):
+    def __init__(self, mask_objects=False, single_object=False, classes_to_display=[],
+                 write_to_img_file='',
+                 write_to_detections_file=''):
         print("Initializing the Tracker")
         self.last_detected_bbs = {}
         self.last_detected_bb_clusters = {}
@@ -329,5 +340,6 @@ class Tracker:
         self.mask_objects = mask_objects
         self.single_object = single_object
         self.classes_to_display = classes_to_display
-        self.write_to_file = write_to_file
+        self.write_to_img_file = write_to_img_file
+        self.write_to_detections_file = write_to_detections_file
         rospy.spin()

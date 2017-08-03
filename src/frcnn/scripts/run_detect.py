@@ -17,16 +17,9 @@ import matplotlib
 matplotlib.use('pdf')
 
 import argparse
-# import sys
+
 import _init_paths
 
-# sys.path.append("/opt/ros-ort/devel/lib/python2.7/dist-packages")
-# sys.path.append("/opt/ros/kinetic/lib/python2.7/dist-packages")
-# sys.path.append("/opt/ros-ort/install/lib/python2.7/dist-packages")
-# sys.path.append("/opt/ros-ort/src/frcnn/src")
-# sys.path.append("/opt/ros/kinetic/bin")
-
-# print sys.path
 from frcnn.detector import Detector
 from lib.datasets.nico import Nico
 from lib.datasets.pascal_voc import pascal_voc
@@ -37,33 +30,7 @@ CLASS_PROPERTIES_NICO = Nico.CLASS_PROPERTIES
 
 CLASSES_PASCAL = pascal_voc.CLASSES
 
-CLASSES_COCO = ('__background__',
-                   'aeroplane0', 'bicycle0', 'bird0', 'boat0',
-                   'bottle0', 'bus0', 'car0', 'cat0', 'chair0',
-                   'cow0', 'diningtable0', 'dog0', 'horse0',
-                   'motorbike0', 'person0', 'pottedplant0',
-                   'sheep0', 'sofa0', 'train0', 'tvmonitor0',
-                    'aeroplane1', 'bicycle1', 'bird1', 'boat1',
-                    'bottle1', 'bus1', 'car1', 'cat1', 'chair1',
-                    'cow1', 'diningtable1', 'dog1', 'horse1',
-                    'motorbike1', 'person1', 'pottedplant1',
-                    'sheep1', 'sofa1', 'train1', 'tvmonitor1',
-                    'aeroplane2', 'bicycle2', 'bird2', 'boat2',
-                    'bottle2', 'bus2', 'car2', 'cat2', 'chair2',
-                    'cow2', 'diningtable2', 'dog2', 'horse2',
-                    'motorbike2', 'person2', 'pottedplant2',
-                    'sheep2', 'sofa2', 'train2', 'tvmonitor2',
-                    'aeroplane3', 'bicycle3', 'bird3', 'boat3',
-                    'bottle3', 'bus3', 'car3', 'cat3', 'chair3',
-                    'cow3', 'diningtable3', 'dog3', 'horse3',
-                    'motorbike3', 'person3', 'pottedplant3',
-                    'sheep3', 'sofa3', 'train3', 'tvmonitor3')
-
 MODELS = {
-            # 'coco': ('coco',
-            #        'faster_rcnn_end2end',
-            #        'test.prototxt',
-            #        CLASSES_COCO, NETS_COCO),
           'pascal_vgg16': (
                      'caffemodels/faster_rcnn_models/VGG16_faster_rcnn_nico.caffemodel',
                      'src/frcnn/src/models/pascal_voc/VGG16/faster_rcnn_end2end/test.prototxt',
@@ -82,8 +49,6 @@ MODELS = {
                    CLASSES_NICO, CLASS_PROPERTIES_NICO),
           }
 
-# BASE_DIR = "/opt/ros-ort"
-
 def parse_args():
     """Parse input arguments."""
     parser = argparse.ArgumentParser(description='Faster R-CNN demo')
@@ -95,9 +60,8 @@ def parse_args():
                         action='store_true')
 
     parser.add_argument('--threshold', dest='conf_threshold',
-                        help='The confidence threshold to detect an object', default=0.4, type=float)
+                        help='The confidence threshold to detect an object', default=0.04, type=float)
     
-
     poss_models = []
     for m in MODELS.keys():
         poss_models.append(m)

@@ -58,9 +58,6 @@ def parse_args():
     parser.add_argument('--weights', dest='pretrained_model',
                         help='initialize with pretrained model weights',
                         default=MODELS_DIR+'imagenet_models/'+net+'.v2.caffemodel', type=str)
-    # parser.add_argument('--weights', dest='pretrained_model',
-    #                     help='initialize with pretrained model weights',
-    #                     default=None, type=str)
     parser.add_argument('--cfg', dest='cfg_file',
                         help='optional config file',
                         default=BASE_DIR+'/'+cfg, type=str)

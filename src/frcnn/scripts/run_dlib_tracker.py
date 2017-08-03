@@ -20,9 +20,13 @@ def parse_args():
                         default=5, type=int)
     parser.add_argument('--mask_objects', dest='mask_objects', help='Whether or not to display objects only and to remove background',
                         default=False, type=bool)
-    parser.add_argument('--write_to_file', dest='write_to_file',
-                        help='Whether or not to write each frame to the file specified',
-                        default='', type=str)
+    parser.add_argument('--write_to_img_file', dest='write_to_img_file',
+                        help='Whether or not to write each frame image with BBs to the file specified',
+                        default='/tmp/img.jpg', type=str)
+    parser.add_argument('--write_to_detections_file', dest='write_to_detections_file',
+                        help='Whether or not to write each frame\'s bounding boxes to the file specified',
+                        default='/tmp/detections.txt', type=str)
+
 
     args = parser.parse_args()
 

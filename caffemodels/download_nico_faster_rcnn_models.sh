@@ -6,7 +6,7 @@
 mkdir nico_frcnn_models
 
 FILE="nico_frcnn_models/ZF_faster_rcnn_nico.caffemodel"
-URL="https://drive.google.com/uc?export=download&id=0B_Cy6UXhY3PIMHJfckpaQm41Snc"
+URL="https://www.dropbox.com/s/olb7d9a8rfj7aix/ZF_faster_rcnn_nico.caffemodel?dl=1"
 #CHECKSUM=e2a75a32ed77a9d663e496387808b02f
 ##
 #if [ -f $FILE ]; then
@@ -38,7 +38,7 @@ wget $URL -O $FILE
 #
 #tar zxvf $FILE
 #
-echo "Done. Please run this command again to verify that checksum = $CHECKSUM."
+# echo "Done. Please run this command again to verify that checksum = $CHECKSUM."
 
 
 #FILE="VGG16_faster_rcnn_nico.caffemodel"

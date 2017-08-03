@@ -15,7 +15,8 @@ do
 	Enter \"all\" to display all classes.
 	Enter \"mask\" to toggle object masking.
 	Enter \"single\" to toggle display of only a single object with the highest score.
-	Enter \"file:<path>/<to>/<file>\" to specify a file for output.
+	Enter \"img_file:<path>/<to>/<file>\" to specify a file for image output (default is \"/tmp/img.jpg\").
+	Enter \"detect_file:<path>/<to>/<file>\" to specify a file for bounding box coordinate and detection output (default is \"/tmp/detections.txt\").
 	Enter \"exit\" to exit into a bash."
 	read input
 	if [ "$input" = exit ]; then

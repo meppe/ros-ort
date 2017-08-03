@@ -132,6 +132,7 @@ class Detector:
 
         bb_msg = Object_bb_list(frame_id, timestamp, is_keyframe, bb_ul_xs, bb_ul_ys, bb_lr_xs, bb_lr_ys, class_names,
                                 obj_labels, bb_scores)
+        print("Publishing {} detections.".format(len(obj_labels)))
         self.bb_pub.publish(bb_msg)
 
     def frame_detect(self, net, im):

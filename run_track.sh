@@ -17,8 +17,5 @@ docker run \
 --name ros_frcnn_tracking \
 --entrypoint="/frcnn_entrypoint.sh" \
 meppe78/ros-kinetic-frcnn-tracker \
-python src/frcnn/scripts/run_dlib_tracker.py --cum_threshold 1 --class_threshold 0.1 --max_trackers 5
-#bash -c "source '/opt/ros/kinetic/setup.bash' && source '/opt/ros-ort/devel/setup.bash' &&
-#python src/frcnn/scripts/run_dlib_tracker.py --cum_threshold 5 --class_threshold 2.1 --max_trackers 5"
-# bash
+python src/frcnn/scripts/run_dlib_tracker.py --cum_threshold 1.5 --class_threshold 1 --max_trackers 5
 xhost -local:`docker inspect --format='{{ .Config.Hostname }}' ros_frcnn_tracking`
