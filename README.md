@@ -4,7 +4,7 @@ Note that this is work in progress. It should work when you follow the instructi
 
 This repo contains start scripts, and code to run dockerized object recognition and tracking based on ROS. Docker images are based on Ubuntu 16.04 and ROS kinetic. Object detection is based on FRCNN. Scripts have been tested on Ubuntu 14.04 and 16.04.
 
-The system consists of several ROS nodes that each run as a separate docker container. When running for the first time, docker will download the images which can be quite big, so this will take a while. Before running, make sure that you have installed Docker (on Ubuntu 16.04 do ```sudo apt-get install docker```) and nvidia-docker as described here: https://github.com/NVIDIA/nvidia-docker. To be able to run Docker without superuse privileges, you must also add your user to the docker group, as described here: http://askubuntu.com/questions/477551/how-can-i-use-docker-without-sudo. For Ubuntu 14.04 it is recommended to not use the docker that comes with Ubunut, but install docker from here: https://docs.docker.com/engine/installation/linux/ubuntulinux/
+The system consists of several ROS nodes that each run as a separate docker container. When running for the first time, docker will download the images which can be quite big, so this will take a while. Before running, make sure that you have installed Docker (on Ubuntu 16.04 do ```sudo apt-get install docker```) and nvidia-docker as described here: https://github.com/NVIDIA/nvidia-docker. To be able to run Docker without superuse privileges, you must also add your user to the docker group, as described here: http://askubuntu.com/questions/477551/how-can-i-use-docker-without-sudo. For Ubuntu 14.04 it is recommended to not use the docker that comes with Ubuntu, but install docker from here: https://docs.docker.com/engine/installation/linux/ubuntulinux/
 
 For GPU support you need an NVIDIA-driver version >=8.0 and a GPU.
 
@@ -19,23 +19,25 @@ To see a first quick demo, follow the following steps:
 
 2. Run ros nodes. You can run all required nodes automatically by running ```./run_nico_detection.sh```. This script essentially starts the following scripts below:
 
-	1. ROS core
-		The ROS core node. Start by running the script ```./run_roscore.sh```
+	1. ROS core -- The ROS core node is started by running the script ```./run_roscore.sh```
 
-	2. Video preview
-		This is optional and opens a window that shows the original input video stream. Start by running the script ```./run_video_view.sh```. It will subscribe to the topic frcnn_input/camera_raw. 
+	2. Video stream -- 
+		Starts the video stream . Started by ```run_video_stream.sh```. By default, it reads from ``/dev/video0`` and publishes `/frcnn_input/camera_raw`. Inspect the script to understand streaming from a video file or streaming from another video source. 
+	
+	3. Video preview -- 
+		This is optional and opens a window that shows the original input video stream. It is started with the script ```./run_video_view.sh```. It will subscribe to the topic frcnn_input/camera_raw. 
 		
-	3. Object detection
-		This runs the Faster-RCNN-based object detection. Start by running the script ```./run_frcnn_detect.sh``` for CPU use or ```./run_frcnn_detect.sh --gpu``` for running it on your GPU. It will subscribe to the topic /frcnn_input/camera_raw, and it will publish the topic /frcnn/bb for the bounding box information and the topic /frcnn/bb_img to re-publish those video frames from the input stream which haven been processed. The frequency depends on the processing speed. Without a GPU around 0.1 -- 0.2 Hz.
+	4. Object detection -- 
+		This runs the Faster-RCNN-based object detection. It is started by running the script ```./run_frcnn_detect.sh``` for CPU use or ```./run_frcnn_detect.sh --gpu``` for running it on your GPU. It subscribes to the topic `/frcnn_input/camera_raw`, and it will publish the topic `/frcnn/bb` for the bounding box information and the topic `/frcnn/bb_img` to re-publish those video frames from the input stream which haven been processed. The frequency depends on the processing speed. Without a GPU around 0.1 -- 0.2 Hz, and with a NVIDIA Titan GPU around 5 Hz. 
 		
-	4. Object tracking
-		This runs the tracking. It clusters the bounding boxes delivered by the detector (subscribes to topics /frcnn/bb and /frcnn/bb_img) and assigns labels. The results are published on topic /frcnn/bb_img_tracking. 
-		To run the node do ```run_frcnn_track.sh```.
+	5. Object tracking -- Started via ```run_frcnn_track.sh```. It clusters the bounding boxes delivered by the detector (subscribes to topics `/frcnn/bb` and `/frcnn/bb_img`) and assigns labels. The results are published on topic /frcnn/bb_img_tracking. 
 		
-	5. Tracking preview
-		This opens a window to show the tracking result. It subscribes to topic /frcnn/bb_img_tracking. To run the node do ```run_video_stream.sh```
+		
 
-	6. Text interface
+	6. Tracking preview -- 
+		This opens a window to show the tracking result. It subscribes to topic `/frcnn/bb_img_tracking`. It is started with ```run_video_tracking_view.sh```
+
+	7. Text interface -- 
 		The script ```./run_txt_interface.sh```  opens the text interface, where you can modify where image files are stored, which objects are to be detected, and whether masking is applied. It should be self-explanatory. 
 
 ## Interfacing with the object detection 
