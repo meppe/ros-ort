@@ -60,8 +60,8 @@ class Annotator:
         xml_str = "<annotation>\n" + \
                   "\t<folder>{}</folder>\n".format("nico2017") + \
                   "\t<filename>{}</filename>".format(img_filename) + \
-                  "\t<source></source>\n" + \
-                  "\t<owner></owner>\n" + \
+                  "\t<source>{}</source>\n".format(filepath) + \
+                  "\t<owner>Manfred Eppe, Knowledge Technology Group, University of Hamburg</owner>\n" + \
                   "\t<size>\n" + \
                   "\t\t<width>{}</width>\n".format(img_width) + \
                   "\t\t<height>{}</height>\n".format(img_height) + \
@@ -213,16 +213,19 @@ class Annotator:
         # print("3")
         # print("Opening drawing window...")
         # time.sleep(0.5)
+        counter = 0
         while True:
             # display the image
             cv2.imshow(wName, rectI.image)
             key = cv2.waitKey(1) & 0xFF
+            # key = cv2.waitKey(0)
             # print("key: {}".format(key))
             # if returnflag is True, break from the loop
             if rectI.returnflag == True:
                 # print("returnflag")
                 break
-            # print("4")
+            # print(counter)
+            counter += 1
         # rectI.returnflag == False
 
         # print "Dragged rectangle coordinates"

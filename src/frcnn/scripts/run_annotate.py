@@ -10,7 +10,7 @@ import numpy as np
 import sys
 from lib.datasets.nico import Nico
 from frcnn.annotator import Annotator
-from lib.annotation.generate_test_train_val import generate_test_train_val_split
+from lib.annotation.generate_train_val_test import generate_train_val_test_split
 
 '''
 Data generation
@@ -27,6 +27,6 @@ DATA_ROOT = "/storage/data/nico2017"
 if __name__ == '__main__':
     print("Starting annotator. The tool reads single frames. To generate frames from video, you can use the gen_frames.sh script")
     annotator = Annotator(data_root=DATA_ROOT, classes=Nico.CLASSES)
-    generate_test_train_val_split()
+    generate_train_val_test_split()
 
 

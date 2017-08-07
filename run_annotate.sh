@@ -17,4 +17,8 @@ docker run \
 --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
 meppe78/ros-kinetic-image-view \
 bash -c 'python src/frcnn/scripts/run_annotate.py'
+
+#docker-compose run annotate
+
 xhost -local:`docker inspect --format='{{ .Config.Hostname }}' $image_name`
+

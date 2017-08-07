@@ -50,9 +50,9 @@ def parse_args():
     cfg = 'experiments/cfgs/faster_rcnn_end2end.yml'
 
     # The setting for pascal_voc 2007
-    dataset = "pascal_voc"
-    train_imdb = "voc_2007_trainval"
-    test_dir = "VOCdevkit2007/VOC2007"
+    # dataset = "pascal_voc"
+    # train_imdb = "voc_2007_trainval"
+    # test_dir = "VOCdevkit2007/VOC2007"
 
     # The setting for nico 2017
     dataset = "nico"
