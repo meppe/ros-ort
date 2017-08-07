@@ -70,11 +70,11 @@ See http://host.robots.ox.ac.uk/pascal/VOC/ for more details about the file stru
 
 Currently, the preferred way to set the threshold values is via command line options in the individual .sh files for each ROS node. The most important ones are 
 	
-	1. the ``--threshold`` in ``run_detect.sh``. This sets the threshold for the object detection
+1. the ``--threshold`` in ``run_detect.sh``. This sets the threshold for the object detection
 
-	2. the ``--class_threshold`` in ``run_track.sh``. This sets the cumulative class score for each class in each bounding box. Cumulative means accumulated score over time with a small decay. See ``tracker.py`` for details. 
+2. the ``--class_threshold`` in ``run_track.sh``. This sets the cumulative class score for each class in each bounding box. Cumulative means accumulated score over time with a small decay. See ``tracker.py`` for details. 
 
-	3. the ``--cum_threshold`` in ``run_trach.sh``. This sets the cumulative total score for each bounding box. Cumulative means accumulated sum of scores of detected classes over time, with a small decay. See ``tracker.py`` for details. 
+3. the ``--cum_threshold`` in ``run_trach.sh``. This sets the cumulative total score for each bounding box. Cumulative means accumulated sum of scores of detected classes over time, with a small decay. See ``tracker.py`` for details. 
 
 
 ## Known issues
