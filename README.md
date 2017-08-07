@@ -8,27 +8,27 @@ The system consists of several ROS nodes that each run as a separate docker cont
 
 For GPU support you need an NVIDIA-driver version >=8.0 and a GPU.
 
-Once you have met the above extrendencies, clone this repository and initialize the submodules using ```git submodule update --init --recursive``. 
+Once you have met the above extrendencies, clone this repository and initialize the submodules using ```git submodule update --init --recursive```. 
 
 ## Quickstart - Object recognition and tracking with pretrained networks
 
 To see a first quick demo, follow the following steps:
 
 1. Download caffe network models. 
-	To download the pretrained network models, run ```./download_caffemodels.sh```.
+	To download the pretrained network models, run ```download_caffemodels.sh```.
 
-2. Run ros nodes. You can run all required nodes automatically by running ```./run_nico_detection.sh```. This script essentially starts the following scripts below:
+2. Run ros nodes. You can run all required nodes automatically by running ```run_nico_detection.sh```. This script essentially starts the following scripts below:
 
-	1. ROS core -- The ROS core node is started by running the script ```./run_roscore.sh```
+	1. ROS core -- The ROS core node is started by running the script ```run_roscore.sh```
 
 	2. Video stream -- 
 		Starts the video stream . Started by ```run_video_stream.sh```. By default, it reads from ``/dev/video0`` and publishes `/frcnn_input/camera_raw`. Inspect the script to understand streaming from a video file or streaming from another video source. 
 	
 	3. Video preview -- 
-		This is optional and opens a window that shows the original input video stream. It is started with the script ```./run_video_view.sh```. It will subscribe to the topic frcnn_input/camera_raw. 
+		This is optional and opens a window that shows the original input video stream. It is started with the script ```run_video_view.sh```. It will subscribe to the topic frcnn_input/camera_raw. 
 		
 	4. Object detection -- 
-		This runs the Faster-RCNN-based object detection. It is started by running the script ```./run_frcnn_detect.sh``` for CPU use or ```./run_frcnn_detect.sh --gpu``` for running it on your GPU. It subscribes to the topic `/frcnn_input/camera_raw`, and it will publish the topic `/frcnn/bb` for the bounding box information and the topic `/frcnn/bb_img` to re-publish those video frames from the input stream which haven been processed. The frequency depends on the processing speed. Without a GPU around 0.1 -- 0.2 Hz, and with a NVIDIA Titan GPU around 5 Hz. 
+		This runs the Faster-RCNN-based object detection. It is started by running the script ```run_frcnn_detect.sh``` for CPU use or ```run_frcnn_detect.sh --gpu``` for running it on your GPU. It subscribes to the topic `/frcnn_input/camera_raw`, and it will publish the topic `/frcnn/bb` for the bounding box information and the topic `/frcnn/bb_img` to re-publish those video frames from the input stream which haven been processed. The frequency depends on the processing speed. Without a GPU around 0.1 -- 0.2 Hz, and with a NVIDIA Titan GPU around 5 Hz. 
 		
 	5. Object tracking -- Started via ```run_frcnn_track.sh```. It clusters the bounding boxes delivered by the detector (subscribes to topics `/frcnn/bb` and `/frcnn/bb_img`) and assigns labels. The results are published on topic /frcnn/bb_img_tracking. 
 		
@@ -38,7 +38,7 @@ To see a first quick demo, follow the following steps:
 		This opens a window to show the tracking result. It subscribes to topic `/frcnn/bb_img_tracking`. It is started with ```run_video_tracking_view.sh```
 
 	7. Text interface -- 
-		The script ```./run_txt_interface.sh```  opens the text interface, where you can modify where image files are stored, which objects are to be detected, and whether masking is applied. It should be self-explanatory. 
+		The script ```run_txt_interface.sh```  opens the text interface, where you can modify where image files are stored, which objects are to be detected, and whether masking is applied. It should be self-explanatory. 
 
 
 ## Interfacing with the object detection 
@@ -86,8 +86,7 @@ Currently, the preferred way to set the threshold values is via command line opt
 libGL error: No matching fbConfigs or visuals found
 libGL error: failed to load driver: swrast
 ```
-
-I have no idea why this is the case...
+I currently have no idea why this is the case...
 
 
 
